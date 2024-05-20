@@ -17,21 +17,35 @@
         }
 
         function logout() {
-            fetch('/logout', {
+            fetch('/csrf-token', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                credentials: 'same-origin' // Send cookies along with the request
+                credentials: 'same-origin'
             })
-            .then(response => {
-                if (response.redirected) {
-                    // Redirect to the login page after logout
-                    window.location.href = response.url;
-                }
+            .then(response => response.json())
+            .then(data => {
+                fetch('/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': data.token // Include CSRF token in the header
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        // Redirect to the login page after logout
+                        window.location.href = response.url;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error logging out:', error);
+                });
             })
             .catch(error => {
-                console.error('Error logging out:', error);
+                console.error('Error fetching CSRF token:', error);
             });
         }
     </script>

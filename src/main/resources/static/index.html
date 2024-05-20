@@ -15,11 +15,31 @@
                     console.error('Error calling /hello API:', error);
                 });
         }
+
+        function logout() {
+            fetch('/logout', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin' // Send cookies along with the request
+            })
+            .then(response => {
+                if (response.redirected) {
+                    // Redirect to the login page after logout
+                    window.location.href = response.url;
+                }
+            })
+            .catch(error => {
+                console.error('Error logging out:', error);
+            });
+        }
     </script>
 </head>
 <body>
 <h1>Hello API Call</h1>
 <button onclick="callHelloApi()">Get Message</button>
+<button onclick="logout()">Logout</button>
 <p id="message"></p>
 </body>
 </html>

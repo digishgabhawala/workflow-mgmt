@@ -37,9 +37,10 @@ public class SecurityConfig {
                 )
                 .logout(logout ->
                         logout
-                                .logoutUrl("/perform_logout")
+                                .logoutUrl("/logout")
                                 .deleteCookies("JSESSIONID")
                                 .logoutSuccessUrl("/login.html")
+                                .invalidateHttpSession(true)
                                 .permitAll()
                 )
                 .csrf().disable();  // Disable CSRF for simplicity, enable in production

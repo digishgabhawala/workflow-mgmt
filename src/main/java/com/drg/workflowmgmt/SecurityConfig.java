@@ -3,6 +3,7 @@ package com.drg.workflowmgmt;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,6 +12,9 @@ import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
 @Configuration
 public class SecurityConfig {
@@ -19,13 +23,19 @@ public class SecurityConfig {
         this.userRepository = userRepository;
     }
 
+    private CsrfTokenRepository csrfTokenRepository() {
+        HttpSessionCsrfTokenRepository repository = new HttpSessionCsrfTokenRepository();
+        repository.setSessionAttributeName("_csrf");
+        return repository;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/index.html", "/hello").authenticated()
-                                .anyRequest().permitAll()
+                                .requestMatchers( "/perform_login","/login.html","/csrf-token").permitAll()
+                                .anyRequest().authenticated()
                 )
                 .formLogin(formLogin ->
                         formLogin
@@ -43,9 +53,13 @@ public class SecurityConfig {
                                 .invalidateHttpSession(true)
                                 .permitAll()
                 )
-                .csrf().disable();  // Disable CSRF for simplicity, enable in production
+                .csrf(csrf ->
+                        csrf.csrfTokenRepository(csrfTokenRepository()) // Configure CSRF token repository
+                );
         return http.build();
+
     }
+
 
 //    @Bean
 //    public UserDetailsService userDetailsService() {
@@ -66,4 +80,5 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return NoOpPasswordEncoder.getInstance();
     }
+
 }

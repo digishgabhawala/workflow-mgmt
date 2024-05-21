@@ -1,40 +1,62 @@
 package com.drg.workflowmgmt;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
+import com.drg.workflowmgmt.usermgmt.Role;
+import com.drg.workflowmgmt.usermgmt.RoleRepository;
+import com.drg.workflowmgmt.usermgmt.User;
+import com.drg.workflowmgmt.usermgmt.UserRepository;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-@Component
-public class DataInitializer implements CommandLineRunner {
+import java.util.Optional;
+import java.util.Set;
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+@Configuration
+public class DataInitializer {
 
-    @Autowired
-    public DataInitializer(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+    @Bean
+    public ApplicationRunner initializer(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+        return args -> initializeData(userRepository, roleRepository, passwordEncoder);
     }
 
-    @Override
-    public void run(String... args) throws Exception {
-        // Check if users already exist in the database
-        if (userRepository.count() == 0) {
-            // Create users
-            User user1 = new User();
-            user1.setUsername("user1");
-            user1.setPassword(passwordEncoder.encode("password1")); // Encrypt password
-            user1.setEnabled(true);
-            userRepository.save(user1);
+    @Transactional
+    public void initializeData(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+        // Create roles
+        Role adminRole = new Role();
+        adminRole.setName("ROLE_ADMIN");
+        Role userRole = new Role();
+        userRole.setName("ROLE_USER");
+        Role drgRole = new Role();
+        drgRole.setName("ROLE_drg");
 
-            User user2 = new User();
-            user2.setUsername("drg");
-            user2.setPassword(passwordEncoder.encode("drg")); // Encrypt password
-            user2.setEnabled(true);
-            userRepository.save(user2);
+        // Save roles
+        roleRepository.save(adminRole);
+        roleRepository.save(userRole);
+        roleRepository.save(drgRole);
 
-            // Add more users as needed
-        }
+        // Retrieve roles to ensure they are managed by the current session
+        Role adminRoleFromDb = roleRepository.findByName("ROLE_ADMIN").orElseThrow(() -> new RuntimeException("ROLE_ADMIN not found"));
+        Role userRoleFromDb = roleRepository.findByName("ROLE_USER").orElseThrow(() -> new RuntimeException("ROLE_USER not found"));
+        Role drgRoleFromDb = roleRepository.findByName("ROLE_drg").orElseThrow(() -> new RuntimeException("ROLE_drg not found"));
+
+        // Create users with managed roles
+        User admin = new User();
+        admin.setUsername("admin");
+        admin.setPassword(passwordEncoder.encode("adminpass"));
+        admin.setRoles(Set.of(adminRoleFromDb, userRoleFromDb,drgRoleFromDb));
+        userRepository.save(admin);
+
+        User user = new User();
+        user.setUsername("drg");
+        user.setPassword(passwordEncoder.encode("drg"));
+        user.setRoles(Set.of(drgRoleFromDb));
+        userRepository.save(user);
+
+        User user1 = new User();
+        user1.setUsername("u");
+        user1.setPassword(passwordEncoder.encode("u"));
+        user1.setRoles(Set.of(userRoleFromDb));
+        userRepository.save(user1);
     }
 }

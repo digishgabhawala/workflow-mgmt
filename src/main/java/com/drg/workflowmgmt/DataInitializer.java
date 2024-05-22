@@ -3,6 +3,10 @@ import com.drg.workflowmgmt.usermgmt.Role;
 import com.drg.workflowmgmt.usermgmt.RoleRepository;
 import com.drg.workflowmgmt.usermgmt.User;
 import com.drg.workflowmgmt.usermgmt.UserRepository;
+import com.drg.workflowmgmt.workflow.Job;
+import com.drg.workflowmgmt.workflow.JobService;
+import com.drg.workflowmgmt.workflow.JobState;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,10 +18,37 @@ import java.util.Set;
 
 @Configuration
 public class DataInitializer {
-
+    @Autowired
+    private JobService jobService;
     @Bean
     public ApplicationRunner initializer(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
-        return args -> initializeData(userRepository, roleRepository, passwordEncoder);
+        return args -> {initializeData(userRepository, roleRepository, passwordEncoder);
+        initJobs();};
+    }
+
+    private void initJobs() {
+        // Create sample Job
+        Job job = new Job();
+        job.setName("Sample Job");
+
+        // Save Job
+        Job createdJob = jobService.createJob(job);
+        if (createdJob != null) {
+            // Create sample JobStates
+            JobState jobState1 = new JobState();
+            jobState1.setName("Pending");
+            JobState jobState2 = new JobState();
+            jobState2.setName("Completed");
+
+            // Save JobStates
+            jobService.createJobState(jobState1);
+            jobService.createJobState(jobState2);
+
+            // Add JobStates to Job
+            jobService.addJobStateToJob(createdJob.getId(), jobState1);
+            jobService.addJobStateToJob(createdJob.getId(), jobState2);
+        }
+
     }
 
     @Transactional

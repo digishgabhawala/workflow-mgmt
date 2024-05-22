@@ -35,7 +35,6 @@ public class SecurityConfig {
                         authorizeRequests
                                 .requestMatchers( "/perform_login","/login.html","/csrf-token").permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/admin1/**").hasRole("drg")
                                 .anyRequest().authenticated()
                 )
                 .formLogin(formLogin ->

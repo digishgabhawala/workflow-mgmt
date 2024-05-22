@@ -46,6 +46,15 @@ public class JobController {
         Job updatedJob = jobService.addJobStateToJob(jobId, jobState);
         return new ResponseEntity<>(updatedJob, HttpStatus.OK);
     }
+    @PostMapping("/{jobId}/removestates")
+    public ResponseEntity<Job> removeJobStateFromJob(@PathVariable Long jobId, @RequestBody JobState jobState) {
+        Job updatedJob = jobService.removeJobStateFromJob(jobId, jobState);
+        if (updatedJob != null) {
+            return new ResponseEntity<>(updatedJob, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
 
     @PostMapping("/jobstates")
     public ResponseEntity<JobState> createJobState(@RequestBody JobState jobState) {
@@ -70,4 +79,5 @@ public class JobController {
         List<JobState> jobStates = jobService.searchJobStatesByName(jobStateName);
         return new ResponseEntity<>(jobStates, HttpStatus.OK);
     }
+
 }

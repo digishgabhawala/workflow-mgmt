@@ -35,6 +35,14 @@ public class JobService {
         return null;
     }
 
+    public Job removeJobStateFromJob(Long jobId, JobState jobState) {
+        Job job = jobRepository.findById(jobId).orElse(null);
+        if (job != null) {
+            job.getJobStates().removeIf(state -> state.getId().equals(jobState.getId()));
+            return jobRepository.save(job);
+        }
+        return null;
+    }
     public JobState createJobState(JobState jobState) {
         return jobStateRepository.save(jobState);
     }
@@ -50,4 +58,5 @@ public class JobService {
     public List<JobState> searchJobStatesByName(String jobStateName) {
         return jobStateRepository.findByNameContaining(jobStateName);
     }
+
 }

@@ -4,49 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workflow Management System</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
 <div class="container">
-    <h1 class="my-4">Workflow Management System</h1>
+    <h1 class="mt-5">Workflow Management System</h1>
 
-    <!-- Job Form -->
-    <form id="jobForm" onsubmit="handleSubmitJob(event)">
+    <!-- Jobs Section -->
+    <div class="d-flex justify-content-between align-items-center">
+        <h2>All Jobs</h2>
+        <button id="showJobFormButton" class="btn btn-primary my-3" onclick="showForm('jobForm', 'showJobFormButton')">Create Job</button>
+    </div>
+    <form id="jobForm" class="d-none" onsubmit="handleSubmitJob(event)">
         <h2>Create Job</h2>
         <div class="form-group">
             <label for="jobName">Job Name:</label>
-            <input type="text" class="form-control" id="jobName" required>
+            <input type="text" id="jobName" class="form-control" required>
         </div>
         <button type="submit" class="btn btn-primary">Create Job</button>
     </form>
-
-    <!-- Job State Form -->
-    <form id="jobStateForm" onsubmit="handleSubmitJobState(event)" class="mt-4">
-        <h2>Create Job State</h2>
-        <div class="form-group">
-            <label for="jobStateName">Job State Name:</label>
-            <input type="text" class="form-control" id="jobStateName" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Create Job State</button>
-    </form>
-
-    <!-- Jobs Table -->
-    <h2 class="mt-5">All Jobs</h2>
-    <table class="table table-striped">
+    <table class="table table-bordered">
         <thead>
         <tr>
             <th>ID</th>
             <th>Name</th>
             <th>Job States</th>
-            <th>Actions</th>
+            <th>Add Job State</th>
         </tr>
         </thead>
         <tbody id="jobTableBody"></tbody>
     </table>
 
-    <!-- Job States Table -->
-    <h2 class="mt-5">All Job States</h2>
-    <table class="table table-striped">
+    <!-- Job States Section -->
+    <div class="d-flex justify-content-between align-items-center">
+        <h2>All Job States</h2>
+        <button id="showJobStateFormButton" class="btn btn-primary my-3" onclick="showForm('jobStateForm', 'showJobStateFormButton')">Create Job State</button>
+    </div>
+    <form id="jobStateForm" class="d-none" onsubmit="handleSubmitJobState(event)">
+        <h2>Create Job State</h2>
+        <div class="form-group">
+            <label for="jobStateName">Job State Name:</label>
+            <input type="text" id="jobStateName" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Job State</button>
+    </form>
+    <table class="table table-bordered">
         <thead>
         <tr>
             <th>ID</th>
@@ -58,8 +60,5 @@
 </div>
 
 <script src="jobs.js"></script>
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

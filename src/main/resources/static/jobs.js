@@ -40,6 +40,18 @@ async function createJobState(jobStateName, csrfToken) {
     return response.json();
 }
 
+async function addJobStateToJob(jobId, jobStateId, csrfToken) {
+    const response = await fetch(`/jobs/${jobId}/jobstates`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({ id: jobStateId })
+    });
+    return response.json();
+}
+
 async function handleSubmitJob(event) {
     event.preventDefault();
     const jobName = document.getElementById('jobName').value;
@@ -64,18 +76,40 @@ async function handleSubmitJobState(event) {
     }
 }
 
+async function handleAddJobState(event, jobId) {
+    event.preventDefault();
+    const jobStateId = document.getElementById(`jobStateSelect-${jobId}`).value;
+    const csrfToken = await fetchCsrfToken();
+    const response = await addJobStateToJob(jobId, jobStateId, csrfToken);
+    if (response.id) {
+        loadJobs();
+        document.getElementById(`addJobStateForm-${jobId}`).classList.add('d-none');
+    } else {
+        alert('Failed to add job state');
+    }
+}
+
 async function loadJobs() {
     const jobs = await fetchJobs();
+    const jobStates = await fetchJobStates();
     const tableBody = document.getElementById('jobTableBody');
     tableBody.innerHTML = '';
     jobs.forEach(job => {
-        const jobStates = job.jobStates.map(state => `<li>${state.name}</li>`).join('');
+        const jobStateOptions = jobStates.map(state => `<option value="${state.id}">${state.name}</option>`).join('');
+        const jobStatesList = job.jobStates.map(state => `<li>${state.name}</li>`).join('');
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${job.id}</td>
             <td>${job.name}</td>
             <td>
-                <ul>${jobStates}</ul>
+                <ul>${jobStatesList}</ul>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-success" onclick="document.getElementById('addJobStateForm-${job.id}').classList.toggle('d-none')">+</button>
+                <form id="addJobStateForm-${job.id}" class="form-inline mt-2 d-none" onsubmit="handleAddJobState(event, ${job.id})">
+                    <select id="jobStateSelect-${job.id}" class="form-control mr-2">${jobStateOptions}</select>
+                    <button type="submit" class="btn btn-primary btn-sm">Add</button>
+                </form>
             </td>
         `;
         tableBody.appendChild(row);

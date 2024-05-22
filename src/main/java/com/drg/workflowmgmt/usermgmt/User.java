@@ -1,5 +1,6 @@
 package com.drg.workflowmgmt.usermgmt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -18,6 +19,7 @@ public class User {
     private String username;
     private String password;
 
+    @JsonIgnore // Prevents infinite loop during serialization
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "users_roles",
@@ -59,4 +61,6 @@ public class User {
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
+
+
 }

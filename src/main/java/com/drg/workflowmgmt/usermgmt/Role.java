@@ -1,5 +1,6 @@
 package com.drg.workflowmgmt.usermgmt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -16,6 +17,7 @@ public class Role {
     @Column(unique = true)
     private String name;
 
+    @JsonIgnore // Prevents infinite loop during serialization
     @ManyToMany(mappedBy = "roles",fetch = FetchType.EAGER)
     private Set<User> users;
 

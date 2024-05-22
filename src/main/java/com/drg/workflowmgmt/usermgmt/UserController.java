@@ -50,6 +50,9 @@ public class UserController {
 
     @PostMapping("/roles")
     public ResponseEntity<Role> createRole(@RequestBody Role role) {
+        if(!role.getName().contains("ROLE_")){
+            role.setName("ROLE_"+role.getName());
+        }
         Role createdRole = userService.createRole(role);
         return new ResponseEntity<>(createdRole, HttpStatus.CREATED);
     }

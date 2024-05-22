@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow Management System</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mui/material/umd/material-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mui/material/umd/material.css">
+</head>
+<body>
+<div id="app">
+    <h1>Workflow Management System</h1>
+
+    <!-- Job Form -->
+    <form id="jobForm" onsubmit="handleSubmitJob(event)">
+        <h2>Create Job</h2>
+        <div style="display: flex; flex-direction: column;">
+            <label for="jobName">Job Name:</label>
+            <input type="text" id="jobName" required>
+        </div>
+        <div style="margin-top: 10px;">
+            <button type="submit" variant="contained" color="primary">Create Job</button>
+        </div>
+    </form>
+
+    <!-- Job State Form -->
+    <form id="jobStateForm" onsubmit="handleSubmitJobState(event)">
+        <h2>Create Job State</h2>
+        <div style="display: flex; flex-direction: column;">
+            <label for="jobStateName">Job State Name:</label>
+            <input type="text" id="jobStateName" required>
+        </div>
+        <div style="margin-top: 10px;">
+            <button type="submit" variant="contained" color="primary">Create Job State</button>
+        </div>
+    </form>
+
+    <!-- Jobs Table -->
+    <h2>All Jobs</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+        </tr>
+        </thead>
+        <tbody id="jobTableBody"></tbody>
+    </table>
+
+    <!-- Job States Table -->
+    <h2>All Job States</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+        </tr>
+        </thead>
+        <tbody id="jobStateTableBody"></tbody>
+    </table>
+</div>
+
+<script src="jobs.js"></script>
+</body>
+</html>

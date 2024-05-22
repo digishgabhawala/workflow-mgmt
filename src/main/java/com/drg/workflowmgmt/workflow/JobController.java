@@ -52,4 +52,22 @@ public class JobController {
         JobState createdJobState = jobService.createJobState(jobState);
         return new ResponseEntity<>(createdJobState, HttpStatus.CREATED);
     }
+
+    @GetMapping("/states")
+    public ResponseEntity<List<JobState>> getAllJobStates() {
+        List<JobState> jobStates = jobService.getAllJobStates();
+        return new ResponseEntity<>(jobStates, HttpStatus.OK);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Job>> searchJobs(@RequestParam String jobName) {
+        List<Job> jobs = jobService.searchJobsByName(jobName);
+        return new ResponseEntity<>(jobs, HttpStatus.OK);
+    }
+
+    @GetMapping("/states/search")
+    public ResponseEntity<List<JobState>> searchJobStates(@RequestParam String jobStateName) {
+        List<JobState> jobStates = jobService.searchJobStatesByName(jobStateName);
+        return new ResponseEntity<>(jobStates, HttpStatus.OK);
+    }
 }

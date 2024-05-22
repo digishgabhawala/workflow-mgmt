@@ -1,12 +1,9 @@
 package com.drg.workflowmgmt.workflow;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+
 
 @Service
 public class JobService {
@@ -40,5 +37,17 @@ public class JobService {
 
     public JobState createJobState(JobState jobState) {
         return jobStateRepository.save(jobState);
+    }
+
+    public List<JobState> getAllJobStates() {
+        return jobStateRepository.findAll();
+    }
+
+    public List<Job> searchJobsByName(String jobName) {
+        return jobRepository.findByNameContaining(jobName);
+    }
+
+    public List<JobState> searchJobStatesByName(String jobStateName) {
+        return jobStateRepository.findByNameContaining(jobStateName);
     }
 }

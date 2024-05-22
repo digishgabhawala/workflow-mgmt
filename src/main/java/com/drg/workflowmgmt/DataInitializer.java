@@ -41,8 +41,8 @@ public class DataInitializer {
             jobState2.setName("Completed");
 
             // Save JobStates
-            jobService.createJobState(jobState1);
-            jobService.createJobState(jobState2);
+            jobState1 = jobService.createJobState(jobState1);
+            jobState2 = jobService.createJobState(jobState2);
 
             // Add JobStates to Job
             jobService.addJobStateToJob(createdJob.getId(), jobState1);

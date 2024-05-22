@@ -69,8 +69,15 @@ async function loadJobs() {
     const tableBody = document.getElementById('jobTableBody');
     tableBody.innerHTML = '';
     jobs.forEach(job => {
+        const jobStates = job.jobStates.map(state => `<li>${state.name}</li>`).join('');
         const row = document.createElement('tr');
-        row.innerHTML = `<td>${job.id}</td><td>${job.name}</td>`;
+        row.innerHTML = `
+            <td>${job.id}</td>
+            <td>${job.name}</td>
+            <td>
+                <ul>${jobStates}</ul>
+            </td>
+        `;
         tableBody.appendChild(row);
     });
 }

@@ -52,6 +52,18 @@ async function addRoleToUser(userId, roleId, csrfToken) {
     return response.json();
 }
 
+async function removeRoleFromUser(userId, roleId, csrfToken) {
+    const response = await fetch(`/users/${userId}/removeroles`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({ id: roleId })
+    });
+    return response.json();
+}
+
 async function handleSubmitUser(event) {
     event.preventDefault();
     const userName = document.getElementById('userName').value;
@@ -80,7 +92,6 @@ async function handleSubmitRole(event) {
 }
 
 async function handleAddRole(event, userId) {
-    console.log('handleAddRole')
     event.preventDefault();
     const roleId = document.getElementById(`roleSelect-${userId}`).value;
     const csrfToken = await fetchCsrfToken();
@@ -93,6 +104,16 @@ async function handleAddRole(event, userId) {
     }
 }
 
+async function handleRemoveRole(userId, roleId) {
+    const csrfToken = await fetchCsrfToken();
+    const removedRole = await removeRoleFromUser(userId, roleId, csrfToken);
+    if (removedRole.id) {
+        loadUsers();
+    } else {
+        alert('Failed to remove role from user');
+    }
+}
+
 function showUserForm() {
     document.getElementById('userForm').classList.remove('d-none');
     document.getElementById('showUserFormButton').style.display = 'none';
@@ -102,6 +123,7 @@ function showRoleForm() {
     document.getElementById('roleForm').classList.remove('d-none');
     document.getElementById('showRoleFormButton').style.display = 'none';
 }
+
 async function loadUsers() {
     const users = await fetchUsers();
     const roles = await fetchRoles();
@@ -143,8 +165,14 @@ function getUserRoles(user, roles) {
         return 'No roles assigned';
     }
 
-    return userRoles.map(role => role.name).join(', ');
+    return userRoles.map(role => `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    ${role.name}
+                    <button class="btn btn-sm btn-danger ml-2" onclick="handleRemoveRole(${user.id}, ${role.id})">Remove</button>
+                </li>
+    `).join('');
 }
+
 
 function getRoleOptions(roles) {
     return roles.map(role => `<option value="${role.id}">${role.name}</option>`).join('');

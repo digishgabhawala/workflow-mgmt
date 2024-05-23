@@ -109,6 +109,11 @@ public class JobController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+    @PutMapping("/{id}")
+    public ResponseEntity<JobState> updateJobState(@PathVariable Long id, @RequestBody JobState jobStateDetails) {
+        JobState updatedJobState = jobService.updateJobState(id, jobStateDetails);
+        return ResponseEntity.ok(updatedJobState);
+    }
 
     public static class TransitionRequest {
         private Long fromStateId;

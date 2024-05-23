@@ -130,4 +130,11 @@ public class JobService {
         }
         return null;
     }
+    public JobState updateJobState(Long id, JobState jobStateDetails) {
+        JobState jobState = jobStateRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("JobState not found"));
+        jobState.setName(jobStateDetails.getName());
+        jobState.setRoles(jobStateDetails.getRoles());
+        jobState.setEstimate(jobStateDetails.getEstimate());
+        return jobStateRepository.save(jobState);
+    }
 }

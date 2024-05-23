@@ -13,6 +13,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 
@@ -34,11 +36,16 @@ public class DataInitializer {
         // Save Job
         Job createdJob = jobService.createJob(job);
         if (createdJob != null) {
-            // Create sample JobStates
+            // Create sample JobStates with roles and estimate
             JobState jobState1 = new JobState();
             jobState1.setName("Pending");
+            jobState1.setRoles(Arrays.asList("ROLE_ADMIN", "ROLE_USER"));
+            jobState1.setEstimate(LocalTime.of(2, 30)); // 2 hours 30 minutes
+
             JobState jobState2 = new JobState();
             jobState2.setName("Completed");
+            jobState2.setRoles(Arrays.asList("ROLE_USER", "ROLE_drg"));
+            jobState2.setEstimate(LocalTime.of(1, 0)); // 1 hour
 
             // Save JobStates
             jobState1 = jobService.createJobState(jobState1);
@@ -48,7 +55,6 @@ public class DataInitializer {
             jobService.addJobStateToJob(createdJob.getId(), jobState1);
             jobService.addJobStateToJob(createdJob.getId(), jobState2);
         }
-
     }
 
     @Transactional

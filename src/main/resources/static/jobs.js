@@ -7,8 +7,16 @@ async function loadJobStates() {
     tableBody.innerHTML = '';
 
     jobStates.forEach(jobState => {
+        const roles = jobState.roles ? jobState.roles.join(', ') : 'N/A';
+        const estimate = jobState.estimate ? `${jobState.estimate[0]}h ${jobState.estimate[1]}m` : 'N/A';
+
         const row = document.createElement('tr');
-        row.innerHTML = `<td>${jobState.id}</td><td>${jobState.name}</td>`;
+        row.innerHTML = `
+            <td>${jobState.id}</td>
+            <td>${jobState.name}</td>
+            <td>${roles}</td>
+            <td>${estimate}</td>
+        `;
         tableBody.appendChild(row);
     });
 }

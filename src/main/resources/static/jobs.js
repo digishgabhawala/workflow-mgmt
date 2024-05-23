@@ -7,9 +7,14 @@ async function fetchRoles() {
 
 async function populateRoleDropdown(jobStateId) {
     const roles = await fetchRoles();
+    const jobState = await fetchJobState(jobStateId);
     const dropdown = document.getElementById(`roleDropdown-${jobStateId}`);
     dropdown.innerHTML = '';
-    roles.forEach(role => {
+
+    // Filter roles that are not already assigned to the job state
+    const availableRoles = roles.filter(role => !jobState.roles.includes(role.name));
+
+    availableRoles.forEach(role => {
         const option = document.createElement('option');
         option.value = role.id;
         option.textContent = role.name;

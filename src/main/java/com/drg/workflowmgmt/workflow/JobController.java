@@ -47,12 +47,16 @@ public class JobController {
         return new ResponseEntity<>(updatedJob, HttpStatus.OK);
     }
     @PostMapping("/{jobId}/removestates")
-    public ResponseEntity<Job> removeJobStateFromJob(@PathVariable Long jobId, @RequestBody JobState jobState) {
-        Job updatedJob = jobService.removeJobStateFromJob(jobId, jobState);
-        if (updatedJob != null) {
-            return new ResponseEntity<>(updatedJob, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    public ResponseEntity<?> removeJobStateFromJob(@PathVariable Long jobId, @RequestBody JobState jobState) {
+        try {
+            Job updatedJob = jobService.removeJobStateFromJob(jobId, jobState);
+            if (updatedJob != null) {
+                return ResponseEntity.ok(updatedJob);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST));
         }
     }
 
@@ -80,13 +84,18 @@ public class JobController {
         return new ResponseEntity<>(jobStates, HttpStatus.OK);
     }
 
+
     @PostMapping("/{jobId}/transitions")
-    public ResponseEntity<Job> addTransition(@PathVariable Long jobId, @RequestBody TransitionRequest transitionRequest) {
-        Job updatedJob = jobService.addTransition(jobId, transitionRequest.getFromStateId(), transitionRequest.getToStateId());
-        if (updatedJob != null) {
-            return new ResponseEntity<>(updatedJob, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    public ResponseEntity<?> addTransition(@PathVariable Long jobId, @RequestBody TransitionRequest transitionRequest) {
+        try {
+            Job updatedJob = jobService.addTransition(jobId, transitionRequest.getFromStateId(), transitionRequest.getToStateId());
+            if (updatedJob != null) {
+                return ResponseEntity.ok(updatedJob);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST));
         }
     }
 
@@ -144,5 +153,30 @@ public class JobController {
 
     }
 
+    public static class ErrorResponse {
+        private String message;
+        private HttpStatus status;
+
+        public ErrorResponse(String message, HttpStatus status) {
+            this.message = message;
+            this.status = status;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public HttpStatus getStatus() {
+            return status;
+        }
+
+        public void setStatus(HttpStatus status) {
+            this.status = status;
+        }
+    }
 
 }

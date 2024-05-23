@@ -1,11 +1,11 @@
 package com.drg.workflowmgmt.workflow;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 
 @Service
 public class JobService {
@@ -37,14 +37,19 @@ public class JobService {
         return null;
     }
 
-    public Job removeJobStateFromJob(Long jobId, JobState jobState) {
+    public Job removeJobStateFromJob(Long jobId, JobState jobState) throws IllegalArgumentException {
         Job job = jobRepository.findById(jobId).orElse(null);
         if (job != null) {
+            // Check if the state is used in any transitions
+            if (job.getFromJobStateIds().contains(jobState.getId()) || job.getToJobStateIds().contains(jobState.getId())) {
+                throw new IllegalArgumentException("Cannot remove job state as it is used in transitions");
+            }
             job.getJobStates().removeIf(state -> state.getId().equals(jobState.getId()));
             return jobRepository.save(job);
         }
         return null;
     }
+
     public JobState createJobState(JobState jobState) {
         return jobStateRepository.save(jobState);
     }
@@ -61,7 +66,7 @@ public class JobService {
         return jobStateRepository.findByNameContaining(jobStateName);
     }
 
-    public Job addTransition(Long jobId, Long fromStateId, Long toStateId) {
+    public Job addTransition(Long jobId, Long fromStateId, Long toStateId) throws IllegalArgumentException {
         Optional<Job> jobOpt = jobRepository.findById(jobId);
         if (jobOpt.isPresent()) {
             Job job = jobOpt.get();
@@ -69,7 +74,24 @@ public class JobService {
             JobState toState = jobStateRepository.findById(toStateId).orElse(null);
 
             if (fromState != null && toState != null) {
-                // Add the transition logic here
+                // Validate that fromState and toState are not the same
+                if (fromStateId.equals(toStateId)) {
+                    throw new IllegalArgumentException("From State and To State cannot be the same");
+                }
+
+                // Validate that the transition does not already exist
+                boolean transitionExists = false;
+                for (int i = 0; i < job.getFromJobStateIds().size(); i++) {
+                    if (job.getFromJobStateIds().get(i).equals(fromStateId) && job.getToJobStateIds().get(i).equals(toStateId)) {
+                        transitionExists = true;
+                        break;
+                    }
+                }
+                if (transitionExists) {
+                    throw new IllegalArgumentException("This transition already exists");
+                }
+
+                // Add the transition
                 job.getFromJobStateIds().add(fromStateId);
                 job.getToJobStateIds().add(toStateId);
                 jobRepository.save(job);
@@ -78,7 +100,6 @@ public class JobService {
         }
         return null;
     }
-
 
     public Job removeTransition(Long jobId, Long fromStateId, Long toStateId) {
         Optional<Job> jobOpt = jobRepository.findById(jobId);
@@ -109,6 +130,4 @@ public class JobService {
         }
         return null;
     }
-
-
 }

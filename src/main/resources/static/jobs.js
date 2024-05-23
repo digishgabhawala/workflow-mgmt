@@ -27,6 +27,8 @@ async function handleAddTransition(event, jobId) {
     if (response.id) {
         loadJobs();
         document.getElementById(`transitionForm-${jobId}`).classList.add('d-none');
+    } else if(response.message){
+        alert (response.message);
     } else {
         alert('Failed to add transition');
     }
@@ -41,6 +43,9 @@ async function addJobTransition(jobId, fromStateId, toStateId, csrfToken) {
         },
         body: JSON.stringify({ fromStateId, toStateId })
     });
+    if(!response.ok){
+
+    }
     return response.json();
 }
 
@@ -104,6 +109,8 @@ async function handleRemoveTransition(event, jobId, fromStateId, toStateId) {
     });
     if (response.ok) {
         loadJobs();
+    } else if(response.message){
+        alert (response.message);
     } else {
         alert('Failed to remove transition');
     }

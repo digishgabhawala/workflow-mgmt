@@ -115,6 +115,8 @@ async function handleRemoveJobState(event, jobId, jobStateId) {
     const response = await removeJobStateFromJob(jobId, jobStateId, csrfToken);
     if (response.id) {
         loadJobs();
+    } else if(response.message){
+        alert (response.message);
     } else {
         alert('Failed to remove job state');
     }

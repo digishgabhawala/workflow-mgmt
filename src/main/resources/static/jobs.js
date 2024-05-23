@@ -31,6 +31,14 @@ async function loadJobs() {
             </li>
         `).join('');
 
+        const addJobStateForm = `
+            <button class="btn btn-sm btn-success btn-block" onclick="document.getElementById('addJobStateForm-${job.id}').classList.toggle('d-none')">Create New +</button>
+            <form id="addJobStateForm-${job.id}" class="form-inline mt-2 d-none" onsubmit="handleAddJobState(event, ${job.id})">
+                <select id="jobStateSelect-${job.id}" class="form-control mr-2 jobStateDropdown">${jobStateOptions}</select>
+                <button type="submit" class="btn btn-primary btn-sm">Add</button>
+            </form>
+        `;
+
         const transitions = job.fromJobStateIds.map((fromStateId, index) => {
             const fromState = jobStates.find(state => state.id === fromStateId);
             const toState = jobStates.find(state => state.id === job.toJobStateIds[index]);
@@ -57,14 +65,12 @@ async function loadJobs() {
             <td>${job.id}</td>
             <td>${job.name}</td>
             <td>
-                <ul class="list-group">${jobStatesList}</ul>
-            </td>
-            <td>
-                <button class="btn btn-sm btn-success" onclick="document.getElementById('addJobStateForm-${job.id}').classList.toggle('d-none')">+</button>
-                <form id="addJobStateForm-${job.id}" class="form-inline mt-2 d-none" onsubmit="handleAddJobState(event, ${job.id})">
-                    <select id="jobStateSelect-${job.id}" class="form-control mr-2 jobStateDropdown">${jobStateOptions}</select>
-                    <button type="submit" class="btn btn-primary btn-sm">Add</button>
-                </form>
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        ${addJobStateForm}
+                    </li>
+                    ${jobStatesList}
+                </ul>
             </td>
             <td>
                 <ul class="list-group">${transitions}</ul>

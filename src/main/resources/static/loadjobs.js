@@ -9,6 +9,7 @@ async function loadJobs() {
         // Filter out states already part of the job
         // Use a for loop to filter out states already part of the job
         const availableJobStates = [];
+        const existingJobStates = [];
         for (let state of jobStates) {
             let isPartOfJob = false;
             for (let jobState of job.jobStates) {
@@ -19,9 +20,12 @@ async function loadJobs() {
             }
             if (!isPartOfJob) {
                 availableJobStates.push(state);
+            }else{
+                existingJobStates.push(state);
             }
         }
         const jobStateOptions = availableJobStates.map(state => `<option value="${state.id}">${state.name}</option>`).join('');
+        const jobTransitionOptions = existingJobStates.map(state => `<option value="${state.id}">${state.name}</option>`).join('');
 
         const jobStatesList = job.jobStates.map(state => `
             <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -54,11 +58,11 @@ async function loadJobs() {
             <form id="transitionForm-${job.id}" class="d-none mt-2" onsubmit="handleAddTransition(event, ${job.id})">
                 <div class="form-group">
                     <label for="fromState-${job.id}">From State:</label>
-                    <select id="fromState-${job.id}" class="form-control">${jobStateOptions}</select>
+                    <select id="fromState-${job.id}" class="form-control">${jobTransitionOptions}</select>
                 </div>
                 <div class="form-group">
                     <label for="toState-${job.id}">To State:</label>
-                    <select id="toState-${job.id}" class="form-control">${jobStateOptions}</select>
+                    <select id="toState-${job.id}" class="form-control">${jobTransitionOptions}</select>
                 </div>
                 <button type="submit" class="btn btn-primary">Add Transition</button>
             </form>

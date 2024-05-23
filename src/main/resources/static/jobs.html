@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workflow Management System</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
     <style>
         .btn-block {
             width: 100%;
@@ -17,9 +19,15 @@
 
     <!-- Jobs Section -->
     <div class="d-flex justify-content-between align-items-center">
-        <h2>All Jobs</h2>
+        <h2 class="d-flex align-items-center">
+            All Jobs
+            <button id="toggleJobsTableBtn" class="btn btn-primary my-3">
+                <i id="jobsTableIcon" class="fas fa-eye"></i> <!-- Show icon -->
+            </button>
+        </h2>
         <button id="showJobFormButton" class="btn btn-primary my-3" onclick="showForm('jobForm', 'showJobFormButton')">Create Job</button>
     </div>
+
     <form id="jobForm" class="d-none" onsubmit="handleSubmitJob(event)">
         <h2>Create Job</h2>
         <div class="form-group">
@@ -28,7 +36,7 @@
         </div>
         <button type="submit" class="btn btn-primary">Create Job</button>
     </form>
-    <table class="table table-bordered">
+    <table id="jobsTable" class="table table-bordered">
         <thead>
         <tr>
             <th>ID</th>
@@ -42,9 +50,15 @@
 
     <!-- Job States Section -->
     <div class="d-flex justify-content-between align-items-center">
-        <h2>All Job States</h2>
+        <h2 class="d-flex align-items-center">
+            All Job States
+            <button id="toggleJobStatesTableBtn" class="btn btn-primary my-3">
+                <i id="jobStatesTableIcon" class="fas fa-eye"></i> <!-- Show icon -->
+            </button>
+        </h2>
         <button id="showJobStateFormButton" class="btn btn-primary my-3" onclick="showForm('jobStateForm', 'showJobStateFormButton')">Create Job State</button>
     </div>
+
     <form id="jobStateForm" class="d-none" onsubmit="handleSubmitJobState(event)">
         <h2>Create Job State</h2>
         <div class="form-group">
@@ -53,7 +67,7 @@
         </div>
         <button type="submit" class="btn btn-primary">Create Job State</button>
     </form>
-    <table class="table table-bordered">
+    <table id="jobStatesTable" class="table table-bordered">
         <thead>
         <tr>
             <th>ID</th>

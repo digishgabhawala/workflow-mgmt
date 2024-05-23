@@ -56,5 +56,48 @@ async function addJobTransition(jobId, fromStateId, toStateId, csrfToken) {
 
 window.onload = async function() {
     loadJobs();
-    loadJobStates();
+    await loadJobStates();
+    // Add event listeners to the Show/Hide buttons
+    document.getElementById('toggleJobStatesTableBtn').addEventListener('click', toggleJobStatesTable);
+    document.getElementById('toggleJobsTableBtn').addEventListener('click', toggleJobsTable);
+    // Initially hide the Job States table
+    jobStatesTable.style.display = 'none';
+    jobsTable.style.display = 'table';
+    // Set initial icons
+    setIcon('jobStatesTableIcon', 'fas fa-eye'); // Show icon
+    setIcon('jobsTableIcon', 'fas fa-eye-slash'); // Show icon
+//    toggleJobStatesTable();
 };
+
+
+// Function to toggle visibility of the Job States table
+function toggleJobStatesTable() {
+    const jobStatesTable = document.getElementById('jobStatesTable');
+    if (jobStatesTable.style.display === 'none' || !jobStatesTable.style.display) {
+        jobStatesTable.style.display = 'table';
+        setIcon('jobStatesTableIcon', 'fas fa-eye-slash'); // Hide icon
+    } else {
+        jobStatesTable.style.display = 'none';
+        setIcon('jobStatesTableIcon', 'fas fa-eye'); // Show icon
+    }
+}
+
+// Function to toggle visibility of the Jobs table
+function toggleJobsTable() {
+    const jobsTable = document.getElementById('jobsTable');
+    if (jobsTable.style.display === 'none' || !jobsTable.style.display) {
+        jobsTable.style.display = 'table';
+        setIcon('jobsTableIcon', 'fas fa-eye-slash'); // Hide icon
+    } else {
+        jobsTable.style.display = 'none';
+        setIcon('jobsTableIcon', 'fas fa-eye'); // Show icon
+    }
+}
+// Function to set icon class
+function setIcon(iconId, iconClass) {
+    const icon = document.getElementById(iconId);
+    if (icon) {
+        icon.className = iconClass;
+    }
+}
+

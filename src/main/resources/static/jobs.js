@@ -1,108 +1,3 @@
-async function fetchCsrfToken() {
-    const response = await fetch('/csrf-token');
-    const data = await response.json();
-    return data.token;
-}
-
-async function fetchJobs() {
-    const response = await fetch('/jobs');
-    const data = await response.json();
-    return data;
-}
-
-async function fetchJobStates() {
-    const response = await fetch('/jobs/states');
-    const data = await response.json();
-    return data;
-}
-
-async function createJob(jobName, csrfToken) {
-    const response = await fetch('/jobs', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        },
-        body: JSON.stringify({ name: jobName })
-    });
-    return response.json();
-}
-
-async function createJobState(jobStateName, csrfToken) {
-    const response = await fetch(`/jobs/jobstates`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        },
-        body: JSON.stringify({ name: jobStateName })
-    });
-    return response.json();
-}
-
-async function addJobStateToJob(jobId, jobStateId, csrfToken) {
-    const response = await fetch(`/jobs/${jobId}/jobstates`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        },
-        body: JSON.stringify({ id: jobStateId })
-    });
-    return response.json();
-}
-
-async function removeJobStateFromJob(jobId, jobStateId, csrfToken) {
-    const response = await fetch(`/jobs/${jobId}/removestates`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        },
-        body: JSON.stringify({ id: jobStateId })
-    });
-    return response.json();
-}
-
-async function handleSubmitJob(event) {
-    event.preventDefault();
-    const jobName = document.getElementById('jobName').value;
-    const csrfToken = await fetchCsrfToken();
-    const createdJob = await createJob(jobName, csrfToken);
-    if (createdJob.id) {
-        loadJobs();
-        document.getElementById('jobForm').reset();
-        document.getElementById('jobForm').classList.add('d-none');
-        document.getElementById('showJobFormButton').style.display = 'inline-block';
-    }
-}
-
-async function handleSubmitJobState(event) {
-    event.preventDefault();
-    const jobStateName = document.getElementById('jobStateName').value;
-    const csrfToken = await fetchCsrfToken();
-    const createdJobState = await createJobState(jobStateName, csrfToken);
-    if (createdJobState.id) {
-        loadJobStates();
-        loadJobs(); // Update the jobs table as well
-        document.getElementById('jobStateForm').reset();
-        document.getElementById('jobStateForm').classList.add('d-none');
-        document.getElementById('showJobStateFormButton').style.display = 'inline-block';
-    }
-}
-
-async function handleAddJobState(event, jobId) {
-    event.preventDefault();
-    const jobStateId = document.getElementById(`jobStateSelect-${jobId}`).value;
-    const csrfToken = await fetchCsrfToken();
-    const response = await addJobStateToJob(jobId, jobStateId, csrfToken);
-    if (response.id) {
-        loadJobs();
-        document.getElementById(`addJobStateForm-${jobId}`).classList.add('d-none');
-    } else {
-        alert('Failed to add job state');
-    }
-}
 
 function showForm(formId, buttonId) {
     document.getElementById(formId).classList.remove('d-none');
@@ -125,14 +20,38 @@ async function loadJobs() {
     const jobStates = await fetchJobStates();
     const tableBody = document.getElementById('jobTableBody');
     tableBody.innerHTML = '';
+
     jobs.forEach(job => {
         const jobStateOptions = jobStates.map(state => `<option value="${state.id}">${state.name}</option>`).join('');
+
         const jobStatesList = job.jobStates.map(state => `
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 ${state.name}
                 <button class="btn btn-sm btn-danger ml-2" onclick="handleRemoveJobState(event, ${job.id}, ${state.id})">Remove</button>
             </li>
         `).join('');
+
+        const transitions = job.fromJobStateIds.map((fromStateId, index) => {
+            const fromState = jobStates.find(state => state.id === fromStateId);
+            const toState = jobStates.find(state => state.id === job.toJobStateIds[index]);
+            return fromState && toState ? `<li class="list-group-item">${fromState.name} -> ${toState.name}</li>` : '';
+        }).join('');
+
+        const transitionForm = `
+            <button class="btn btn-sm btn-primary" onclick="document.getElementById('transitionForm-${job.id}').classList.toggle('d-none')">+</button>
+            <form id="transitionForm-${job.id}" class="d-none mt-2" onsubmit="handleAddTransition(event, ${job.id})">
+                <div class="form-group">
+                    <label for="fromState-${job.id}">From State:</label>
+                    <select id="fromState-${job.id}" class="form-control">${jobStateOptions}</select>
+                </div>
+                <div class="form-group">
+                    <label for="toState-${job.id}">To State:</label>
+                    <select id="toState-${job.id}" class="form-control">${jobStateOptions}</select>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Transition</button>
+            </form>
+        `;
+
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${job.id}</td>
@@ -147,12 +66,17 @@ async function loadJobs() {
                     <button type="submit" class="btn btn-primary btn-sm">Add</button>
                 </form>
             </td>
+            <td>
+                <ul class="list-group">${transitions}</ul>
+                ${transitionForm}
+            </td>
         `;
         tableBody.appendChild(row);
     });
 
     loadJobStates();
 }
+
 
 async function loadJobStates() {
     const jobStates = await fetchJobStates();
@@ -175,6 +99,36 @@ async function loadJobStates() {
         row.innerHTML = `<td>${jobState.id}</td><td>${jobState.name}</td>`;
         tableBody.appendChild(row);
     });
+}
+function toggleTransitionForm(jobId) {
+    const form = document.getElementById(`transitionForm-${jobId}`);
+    form.classList.toggle('d-none');
+}
+
+async function handleAddTransition(event, jobId) {
+    event.preventDefault();
+    const fromStateId = document.getElementById(`fromState-${jobId}`).value;
+    const toStateId = document.getElementById(`toState-${jobId}`).value;
+    const csrfToken = await fetchCsrfToken();
+    const response = await addJobTransition(jobId, fromStateId, toStateId, csrfToken);
+    if (response.id) {
+        loadJobs();
+        document.getElementById(`transitionForm-${jobId}`).classList.add('d-none');
+    } else {
+        alert('Failed to add transition');
+    }
+}
+
+async function addJobTransition(jobId, fromStateId, toStateId, csrfToken) {
+    const response = await fetch(`/jobs/${jobId}/transitions`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({ fromStateId, toStateId })
+    });
+    return response.json();
 }
 
 window.onload = async function() {

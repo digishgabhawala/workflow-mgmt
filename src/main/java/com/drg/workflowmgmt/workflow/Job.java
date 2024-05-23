@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -23,7 +25,11 @@ public class Job {
             joinColumns = @JoinColumn(name = "job_id"),
             inverseJoinColumns = @JoinColumn(name = "jobstate_id"))
     private List<JobState> jobStates;
+    @ElementCollection
+    private List<Long> fromJobStateIds = new ArrayList<>();
 
+    @ElementCollection
+    private List<Long> toJobStateIds = new ArrayList<>();
     // Constructors, getters, setters
 
     public Long getId() {
@@ -48,5 +54,20 @@ public class Job {
 
     public void setJobStates(List<JobState> jobStates) {
         this.jobStates = jobStates;
+    }
+    public List<Long> getFromJobStateIds() {
+        return fromJobStateIds;
+    }
+
+    public void setFromJobStateIds(List<Long> fromJobStateIds) {
+        this.fromJobStateIds = fromJobStateIds;
+    }
+
+    public List<Long> getToJobStateIds() {
+        return toJobStateIds;
+    }
+
+    public void setToJobStateIds(List<Long> toJobStateIds) {
+        this.toJobStateIds = toJobStateIds;
     }
 }

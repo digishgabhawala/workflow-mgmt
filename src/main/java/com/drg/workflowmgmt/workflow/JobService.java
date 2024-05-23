@@ -3,6 +3,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -57,6 +58,35 @@ public class JobService {
 
     public List<JobState> searchJobStatesByName(String jobStateName) {
         return jobStateRepository.findByNameContaining(jobStateName);
+    }
+
+    public Job addTransition(Long jobId, Long fromStateId, Long toStateId) {
+        Optional<Job> jobOpt = jobRepository.findById(jobId);
+        if (jobOpt.isPresent()) {
+            Job job = jobOpt.get();
+            JobState fromState = jobStateRepository.findById(fromStateId).orElse(null);
+            JobState toState = jobStateRepository.findById(toStateId).orElse(null);
+
+            if (fromState != null && toState != null) {
+                // Add the transition logic here
+                job.getFromJobStateIds().add(fromStateId);
+                job.getToJobStateIds().add(toStateId);
+                jobRepository.save(job);
+                return job;
+            }
+        }
+        return null;
+    }
+
+
+    public Job removeTransition(Long jobId, Long fromStateId, Long toStateId) {
+        Job job = jobRepository.findById(jobId).orElse(null);
+        if (job != null) {
+            job.getFromJobStateIds().remove(fromStateId);
+            job.getToJobStateIds().remove(toStateId);
+            return jobRepository.save(job);
+        }
+        return null;
     }
 
 }

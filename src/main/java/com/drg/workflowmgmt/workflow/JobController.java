@@ -92,14 +92,15 @@ public class JobController {
 
 
     @DeleteMapping("/{jobId}/transitions")
-    public ResponseEntity<Job> removeTransition(@PathVariable Long jobId, @RequestParam Long fromStateId, @RequestParam Long toStateId) {
-        Job updatedJob = jobService.removeTransition(jobId, fromStateId, toStateId);
+    public ResponseEntity<Job> removeTransition(@PathVariable Long jobId, @RequestBody TransitionDto transitionDto) {
+        Job updatedJob = jobService.removeTransition(jobId, transitionDto.getFromStateId(), transitionDto.getToStateId());
         if (updatedJob != null) {
             return new ResponseEntity<>(updatedJob, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
     public static class TransitionRequest {
         private Long fromStateId;
         private Long toStateId;
@@ -120,5 +121,28 @@ public class JobController {
             this.toStateId = toStateId;
         }
     }
+
+    public static class TransitionDto {
+        private Long fromStateId;
+        private Long toStateId;
+
+        public Long getFromStateId() {
+            return fromStateId;
+        }
+
+        public void setFromStateId(Long fromStateId) {
+            this.fromStateId = fromStateId;
+        }
+
+        public Long getToStateId() {
+            return toStateId;
+        }
+
+        public void setToStateId(Long toStateId) {
+            this.toStateId = toStateId;
+        }
+
+    }
+
 
 }

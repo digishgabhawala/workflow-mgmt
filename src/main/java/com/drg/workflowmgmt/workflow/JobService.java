@@ -2,6 +2,7 @@ package com.drg.workflowmgmt.workflow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -80,13 +81,34 @@ public class JobService {
 
 
     public Job removeTransition(Long jobId, Long fromStateId, Long toStateId) {
-        Job job = jobRepository.findById(jobId).orElse(null);
-        if (job != null) {
-            job.getFromJobStateIds().remove(fromStateId);
-            job.getToJobStateIds().remove(toStateId);
-            return jobRepository.save(job);
+        Optional<Job> jobOpt = jobRepository.findById(jobId);
+        if (jobOpt.isPresent()) {
+            Job job = jobOpt.get();
+            List<Integer> indexesToRemove = new ArrayList<>();
+            List<Long> fromStateIds = job.getFromJobStateIds();
+            List<Long> toStateIds = job.getToJobStateIds();
+
+            // Find all occurrences of the transition in the job
+            for (int i = 0; i < fromStateIds.size(); i++) {
+                if (fromStateIds.get(i).equals(fromStateId) && toStateIds.get(i).equals(toStateId)) {
+                    indexesToRemove.add(i);
+                }
+            }
+
+            // Remove the transition from the job
+            if (!indexesToRemove.isEmpty()) {
+                // Remove transitions in reverse order to avoid index shift
+                for (int i = indexesToRemove.size() - 1; i >= 0; i--) {
+                    int index = indexesToRemove.get(i);
+                    fromStateIds.remove(index);
+                    toStateIds.remove(index);
+                }
+                jobRepository.save(job);
+                return job;
+            }
         }
         return null;
     }
+
 
 }

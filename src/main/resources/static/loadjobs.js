@@ -1,3 +1,21 @@
+async function handleRemoveTransition(event, jobId, fromStateId, toStateId) {
+    event.preventDefault();
+    const csrfToken = await fetchCsrfToken();
+    const response = await fetch(`/jobs/${jobId}/transitions`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({ fromStateId: fromStateId, toStateId: toStateId })
+    });
+    if (response.ok) {
+        loadJobs();
+    } else {
+        alert('Failed to remove transition');
+    }
+}
+
 async function loadJobs() {
     const jobs = await fetchJobs();
     const jobStates = await fetchJobStates();
@@ -25,7 +43,12 @@ async function loadJobs() {
         const transitionsList = job.fromJobStateIds.map((fromStateId, index) => {
             const fromState = jobStates.find(state => state.id === fromStateId);
             const toState = jobStates.find(state => state.id === job.toJobStateIds[index]);
-            return fromState && toState ? `<li class="list-group-item">${fromState.name} -> ${toState.name}</li>` : '';
+            return fromState && toState ? `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    ${fromState.name} -> ${toState.name}
+                    <button class="btn btn-sm btn-danger ml-2" onclick="handleRemoveTransition(event, ${job.id}, ${fromStateId}, ${job.toJobStateIds[index]})">Remove</button>
+                </li>
+            ` : '';
         }).join('');
 
         const addTransitionForm = `

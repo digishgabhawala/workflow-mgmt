@@ -41,6 +41,8 @@ public class JobController {
         }
     }
 
+
+
     @PostMapping("/{jobId}/jobstates")
     public ResponseEntity<Job> addJobStateToJob(@PathVariable Long jobId, @RequestBody JobState jobState) {
         Job updatedJob = jobService.addJobStateToJob(jobId, jobState);
@@ -109,7 +111,7 @@ public class JobController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-    @PutMapping("/{id}")
+    @PutMapping("/jobState/{id}/")
     public ResponseEntity<JobState> updateJobState(@PathVariable Long id, @RequestBody JobState jobStateDetails) {
         JobState updatedJobState = jobService.updateJobState(id, jobStateDetails);
         return ResponseEntity.ok(updatedJobState);

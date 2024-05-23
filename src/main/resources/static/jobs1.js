@@ -10,11 +10,7 @@ async function fetchJobs() {
     return data;
 }
 
-async function fetchJobStates() {
-    const response = await fetch('/jobs/states');
-    const data = await response.json();
-    return data;
-}
+
 
 async function createJob(jobName, csrfToken) {
     const response = await fetch('/jobs', {

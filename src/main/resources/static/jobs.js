@@ -1,5 +1,26 @@
 
 
+async function fetchRoles() {
+    const response = await fetch('/users/roles');
+    return response.json();
+}
+
+async function populateRoleDropdown(jobStateId) {
+    const roles = await fetchRoles();
+    const dropdown = document.getElementById(`roleDropdown-${jobStateId}`);
+    dropdown.innerHTML = '';
+    roles.forEach(role => {
+        const option = document.createElement('option');
+        option.value = role.id;
+        option.textContent = role.name;
+        dropdown.appendChild(option);
+    });
+}
+async function fetchJobStates() {
+    const response = await fetch('/jobs/states');
+    const data = await response.json();
+    return data;
+}
 
 async function loadJobStates() {
     const jobStates = await fetchJobStates();
@@ -7,19 +28,98 @@ async function loadJobStates() {
     tableBody.innerHTML = '';
 
     jobStates.forEach(jobState => {
-        const roles = jobState.roles ? jobState.roles.join(', ') : 'N/A';
+        const rolesList = jobState.roles ? jobState.roles.map(role => `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                ${role}
+                <button class="btn btn-sm btn-danger ml-2" onclick="handleRemoveRole(event, ${jobState.id}, '${role}')">Remove</button>
+            </li>
+        `).join('') : '';
+
+        const addRoleForm = `
+            <button class="btn btn-sm btn-success btn-block" onclick="document.getElementById('addRoleForm-${jobState.id}').classList.toggle('d-none')">
+                <i class="fas fa-plus"></i> Add Role
+            </button>
+            <form id="addRoleForm-${jobState.id}" class="form-inline mt-2 d-none" onsubmit="handleAddRole(event, ${jobState.id})">
+                <select id="roleDropdown-${jobState.id}" class="form-control mr-2"></select>
+                <button type="submit" class="btn btn-primary btn-sm">Add</button>
+            </form>
+        `;
+
         const estimate = jobState.estimate ? `${jobState.estimate[0]}h ${jobState.estimate[1]}m` : 'N/A';
 
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${jobState.id}</td>
             <td>${jobState.name}</td>
-            <td>${roles}</td>
+            <td>
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        ${addRoleForm}
+                    </li>
+                    ${rolesList}
+                </ul>
+            </td>
             <td>${estimate}</td>
         `;
         tableBody.appendChild(row);
+
+        // Populate the role dropdown after adding the row
+        populateRoleDropdown(jobState.id);
     });
 }
+
+async function handleAddRole(event, jobStateId) {
+    event.preventDefault();
+    const roleDropdown = document.getElementById(`roleDropdown-${jobStateId}`);
+    const roleName = roleDropdown.options[roleDropdown.selectedIndex].text;
+    if (roleName) {
+        const csrfToken = await fetchCsrfToken();
+        await addRoleToJobState(jobStateId, roleName, csrfToken);
+        loadJobStates();
+    }
+}
+
+async function handleRemoveRole(event, jobStateId, roleName) {
+    event.preventDefault();
+    const csrfToken = await fetchCsrfToken();
+    await removeRoleFromJobState(jobStateId, roleName, csrfToken);
+    loadJobStates();
+}
+
+async function addRoleToJobState(jobStateId, roleName, csrfToken) {
+    const jobState = await fetchJobState(jobStateId);
+    if (!jobState.roles.includes(roleName)) {
+        jobState.roles.push(roleName);
+        await updateJobState(jobStateId, jobState, csrfToken);
+    }
+}
+
+async function removeRoleFromJobState(jobStateId, roleName, csrfToken) {
+    const jobState = await fetchJobState(jobStateId);
+    const roleIndex = jobState.roles.indexOf(roleName);
+    if (roleIndex > -1) {
+        jobState.roles.splice(roleIndex, 1);
+        await updateJobState(jobStateId, jobState, csrfToken);
+    }
+}
+
+async function fetchJobState(jobStateId) {
+    const response = await fetch(`jobsstates/${jobStateId}`);
+    return response.json();
+}
+
+async function updateJobState(jobStateId, jobState, csrfToken) {
+    const response = await fetch(`/jobs/jobState/${jobStateId}/`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify(jobState)
+    });
+    return response.json();
+}
+
 
 function toggleTransitionForm(jobId) {
     const form = document.getElementById(`transitionForm-${jobId}`);

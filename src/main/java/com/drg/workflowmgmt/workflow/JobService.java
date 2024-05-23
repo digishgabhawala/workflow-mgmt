@@ -137,4 +137,8 @@ public class JobService {
         jobState.setEstimate(jobStateDetails.getEstimate());
         return jobStateRepository.save(jobState);
     }
+
+    public JobState getJobState(Long jobStateId) {
+        return jobStateRepository.findById(jobStateId).orElse(null);
+    }
 }

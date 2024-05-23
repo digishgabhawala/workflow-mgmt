@@ -1,6 +1,5 @@
 package com.drg.workflowmgmt;
 
-
 import com.drg.workflowmgmt.usermgmt.UserDetailsServiceImpl;
 import com.drg.workflowmgmt.usermgmt.UserRepository;
 import org.springframework.context.annotation.Bean;
@@ -12,12 +11,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
 @EnableTransactionManagement
 public class SecurityConfig {
     private final UserRepository userRepository;
+
     public SecurityConfig(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
@@ -33,7 +35,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers( "/perform_login","/login.html","/csrf-token").permitAll()
+                                .requestMatchers("/perform_login", "/login.html", "/csrf-token").permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .anyRequest().authenticated()
                 )
@@ -41,8 +43,8 @@ public class SecurityConfig {
                         formLogin
                                 .loginPage("/login.html")
                                 .loginProcessingUrl("/perform_login")
-                                .defaultSuccessUrl("/index.html", true)
-                                .failureUrl("/login.html?error=true")
+                                .successHandler(successHandler()) // Set custom success handler
+                                .failureHandler(failureHandler()) // Set custom failure handler
                                 .permitAll()
                 )
                 .logout(logout ->
@@ -57,28 +59,29 @@ public class SecurityConfig {
                         csrf.csrfTokenRepository(csrfTokenRepository()) // Configure CSRF token repository
                 );
         return http.build();
-
     }
 
+    @Bean
+    public SavedRequestAwareAuthenticationSuccessHandler successHandler() {
+        SavedRequestAwareAuthenticationSuccessHandler handler = new SavedRequestAwareAuthenticationSuccessHandler();
+        handler.setDefaultTargetUrl("/index.html");
+        return handler;
+    }
 
-//    @Bean
-//    public UserDetailsService userDetailsService() {
-//        UserDetails user = User.withDefaultPasswordEncoder()
-//                .username("drg")
-//                .password("drg")
-//                .roles("USER")
-//                .build();
-//
-//        return new InMemoryUserDetailsManager(user);
-//    }
+    @Bean
+    public SimpleUrlAuthenticationFailureHandler failureHandler() {
+        SimpleUrlAuthenticationFailureHandler handler = new SimpleUrlAuthenticationFailureHandler();
+        handler.setDefaultFailureUrl("/login.html?error=true");
+        return handler;
+    }
 
     @Bean
     public UserDetailsService userDetailsService() {
         return new UserDetailsServiceImpl(userRepository);
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return NoOpPasswordEncoder.getInstance();
     }
-
 }

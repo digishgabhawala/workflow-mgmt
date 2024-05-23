@@ -103,3 +103,19 @@ async function handleAddJobState(event, jobId) {
         alert('Failed to add job state');
     }
 }
+
+function showForm(formId, buttonId) {
+    document.getElementById(formId).classList.remove('d-none');
+    document.getElementById(buttonId).style.display = 'none';
+}
+
+async function handleRemoveJobState(event, jobId, jobStateId) {
+    event.preventDefault();
+    const csrfToken = await fetchCsrfToken();
+    const response = await removeJobStateFromJob(jobId, jobStateId, csrfToken);
+    if (response.id) {
+        loadJobs();
+    } else {
+        alert('Failed to remove job state');
+    }
+}

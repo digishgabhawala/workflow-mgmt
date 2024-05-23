@@ -5,17 +5,6 @@ async function loadJobStates() {
     const jobStates = await fetchJobStates();
     const tableBody = document.getElementById('jobStateTableBody');
     tableBody.innerHTML = '';
-    const dropdowns = document.querySelectorAll('.jobStateDropdown');
-
-    dropdowns.forEach(dropdown => {
-        dropdown.innerHTML = ''; // Clear existing options
-        jobStates.forEach(jobState => {
-            const option = document.createElement('option');
-            option.value = jobState.id;
-            option.textContent = jobState.name;
-            dropdown.appendChild(option);
-        });
-    });
 
     jobStates.forEach(jobState => {
         const row = document.createElement('tr');
@@ -23,6 +12,7 @@ async function loadJobStates() {
         tableBody.appendChild(row);
     });
 }
+
 function toggleTransitionForm(jobId) {
     const form = document.getElementById(`transitionForm-${jobId}`);
     form.classList.toggle('d-none');
@@ -101,3 +91,20 @@ function setIcon(iconId, iconClass) {
     }
 }
 
+async function handleRemoveTransition(event, jobId, fromStateId, toStateId) {
+    event.preventDefault();
+    const csrfToken = await fetchCsrfToken();
+    const response = await fetch(`/jobs/${jobId}/transitions`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({ fromStateId: fromStateId, toStateId: toStateId })
+    });
+    if (response.ok) {
+        loadJobs();
+    } else {
+        alert('Failed to remove transition');
+    }
+}

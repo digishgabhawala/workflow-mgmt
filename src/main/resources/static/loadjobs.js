@@ -1,20 +1,3 @@
-async function handleRemoveTransition(event, jobId, fromStateId, toStateId) {
-    event.preventDefault();
-    const csrfToken = await fetchCsrfToken();
-    const response = await fetch(`/jobs/${jobId}/transitions`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        },
-        body: JSON.stringify({ fromStateId: fromStateId, toStateId: toStateId })
-    });
-    if (response.ok) {
-        loadJobs();
-    } else {
-        alert('Failed to remove transition');
-    }
-}
 
 async function loadJobs() {
     const jobs = await fetchJobs();
@@ -23,7 +6,22 @@ async function loadJobs() {
     tableBody.innerHTML = '';
 
     jobs.forEach(job => {
-        const jobStateOptions = jobStates.map(state => `<option value="${state.id}">${state.name}</option>`).join('');
+        // Filter out states already part of the job
+        // Use a for loop to filter out states already part of the job
+        const availableJobStates = [];
+        for (let state of jobStates) {
+            let isPartOfJob = false;
+            for (let jobState of job.jobStates) {
+                if (jobState.id === state.id) {
+                    isPartOfJob = true;
+                    break;
+                }
+            }
+            if (!isPartOfJob) {
+                availableJobStates.push(state);
+            }
+        }
+        const jobStateOptions = availableJobStates.map(state => `<option value="${state.id}">${state.name}</option>`).join('');
 
         const jobStatesList = job.jobStates.map(state => `
             <li class="list-group-item d-flex justify-content-between align-items-center">

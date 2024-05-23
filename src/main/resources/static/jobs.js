@@ -64,12 +64,21 @@ async function loadJobStates() {
                     ${rolesList}
                 </ul>
             </td>
-            <td>${estimate}</td>
+            <td>
+                <span id="estimate-${jobState.id}">${estimate}</span>
+                <button class="btn btn-sm btn-primary ml-2" onclick="showTimeInput(${jobState.id})">Edit</button>
+                <input type="time" id="timeInput-${jobState.id}" class="hidden time-input">
+            </td>
         `;
         tableBody.appendChild(row);
 
         // Populate the role dropdown after adding the row
         populateRoleDropdown(jobState.id);
+
+        // Initialize timepicker
+        document.getElementById(`timeInput-${jobState.id}`).addEventListener('change', function() {
+                    handleTimeInputChange(jobState.id, this.value);
+                });
     });
 }
 
@@ -124,8 +133,20 @@ async function updateJobState(jobStateId, jobState, csrfToken) {
     });
     return response.json();
 }
+function showTimeInput(jobStateId) {
+    const timeInput = document.getElementById(`timeInput-${jobStateId}`);
+    timeInput.classList.remove('hidden');
+    timeInput.focus();
+}
 
-
+async function handleTimeInputChange(jobStateId, time) {
+    const csrfToken = await fetchCsrfToken();
+    const jobState = await fetchJobState(jobStateId);
+    const [hours, minutes] = time.split(':').map(Number);
+    jobState.estimate = [hours, minutes];
+    await updateJobState(jobStateId, jobState, csrfToken);
+    loadJobStates();
+}
 function toggleTransitionForm(jobId) {
     const form = document.getElementById(`transitionForm-${jobId}`);
     form.classList.toggle('d-none');

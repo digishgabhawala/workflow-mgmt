@@ -5,11 +5,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -41,13 +36,12 @@ public class JobController {
         }
     }
 
-
-
     @PostMapping("/{jobId}/jobstates")
     public ResponseEntity<Job> addJobStateToJob(@PathVariable Long jobId, @RequestBody JobState jobState) {
         Job updatedJob = jobService.addJobStateToJob(jobId, jobState);
         return new ResponseEntity<>(updatedJob, HttpStatus.OK);
     }
+
     @PostMapping("/{jobId}/removestates")
     public ResponseEntity<?> removeJobStateFromJob(@PathVariable Long jobId, @RequestBody JobState jobState) {
         try {
@@ -61,31 +55,6 @@ public class JobController {
             return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST));
         }
     }
-
-    @PostMapping("/jobstates")
-    public ResponseEntity<JobState> createJobState(@RequestBody JobState jobState) {
-        JobState createdJobState = jobService.createJobState(jobState);
-        return new ResponseEntity<>(createdJobState, HttpStatus.CREATED);
-    }
-
-    @GetMapping("/states")
-    public ResponseEntity<List<JobState>> getAllJobStates() {
-        List<JobState> jobStates = jobService.getAllJobStates();
-        return new ResponseEntity<>(jobStates, HttpStatus.OK);
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<List<Job>> searchJobs(@RequestParam String jobName) {
-        List<Job> jobs = jobService.searchJobsByName(jobName);
-        return new ResponseEntity<>(jobs, HttpStatus.OK);
-    }
-
-    @GetMapping("/states/search")
-    public ResponseEntity<List<JobState>> searchJobStates(@RequestParam String jobStateName) {
-        List<JobState> jobStates = jobService.searchJobStatesByName(jobStateName);
-        return new ResponseEntity<>(jobStates, HttpStatus.OK);
-    }
-
 
     @PostMapping("/{jobId}/transitions")
     public ResponseEntity<?> addTransition(@PathVariable Long jobId, @RequestBody TransitionRequest transitionRequest) {
@@ -101,7 +70,6 @@ public class JobController {
         }
     }
 
-
     @DeleteMapping("/{jobId}/transitions")
     public ResponseEntity<Job> removeTransition(@PathVariable Long jobId, @RequestBody TransitionDto transitionDto) {
         Job updatedJob = jobService.removeTransition(jobId, transitionDto.getFromStateId(), transitionDto.getToStateId());
@@ -110,11 +78,6 @@ public class JobController {
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-    }
-    @PutMapping("/jobState/{id}/")
-    public ResponseEntity<JobState> updateJobState(@PathVariable Long id, @RequestBody JobState jobStateDetails) {
-        JobState updatedJobState = jobService.updateJobState(id, jobStateDetails);
-        return ResponseEntity.ok(updatedJobState);
     }
 
     public static class TransitionRequest {
@@ -157,7 +120,6 @@ public class JobController {
         public void setToStateId(Long toStateId) {
             this.toStateId = toStateId;
         }
-
     }
 
     public static class ErrorResponse {
@@ -185,5 +147,4 @@ public class JobController {
             this.status = status;
         }
     }
-
 }

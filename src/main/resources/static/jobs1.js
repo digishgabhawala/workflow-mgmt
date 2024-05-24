@@ -24,17 +24,6 @@ async function createJob(jobName, csrfToken) {
     return response.json();
 }
 
-async function createJobState(jobStateName, csrfToken) {
-    const response = await fetch(`/jobs/jobstates`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        },
-        body: JSON.stringify({ name: jobStateName })
-    });
-    return response.json();
-}
 
 async function addJobStateToJob(jobId, jobStateId, csrfToken) {
     const response = await fetch(`/jobs/${jobId}/jobstates`, {

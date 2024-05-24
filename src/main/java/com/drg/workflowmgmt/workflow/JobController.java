@@ -23,8 +23,22 @@ public class JobController {
     @PostMapping
     public ResponseEntity<?> createJob(@RequestBody JobRequest jobRequest) {
         try {
-            JobState startState = jobService.createJobState(jobRequest.getStartState());
-            JobState endState = jobService.createJobState(jobRequest.getEndState());
+            //Check if id are same
+            if(jobRequest.getStartState().getId() == jobRequest.getEndState().getId()){
+                return ResponseEntity.badRequest().body(new ErrorResponse("Start state and end state can not be same", HttpStatus.BAD_REQUEST));
+            }
+            // Check if startState and endState already exist
+            JobState startState = jobService.getJobState(jobRequest.getStartState().getId());
+            JobState endState = jobService.getJobState(jobRequest.getEndState().getId());
+
+            // If startState or endState is null, return error response
+            if (startState == null || endState == null) {
+                return ResponseEntity.badRequest().body(new ErrorResponse("Start state or end state not found", HttpStatus.BAD_REQUEST));
+            }
+
+
+
+            // Create job and return response
             Job job = new Job();
             job.setName(jobRequest.getName());
             Job createdJob = jobService.createJob(job, startState, endState);
@@ -33,6 +47,7 @@ public class JobController {
             return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST));
         }
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Job> getJob(@PathVariable Long id) {

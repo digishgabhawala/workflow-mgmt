@@ -4,26 +4,6 @@ async function fetchCsrfToken() {
     return data.token;
 }
 
-async function fetchJobs() {
-    const response = await fetch('/jobs');
-    const data = await response.json();
-    return data;
-}
-
-
-
-async function createJob(jobName, csrfToken) {
-    const response = await fetch('/jobs', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        },
-        body: JSON.stringify({ name: jobName })
-    });
-    return response.json();
-}
-
 
 async function addJobStateToJob(jobId, jobStateId, csrfToken) {
     const response = await fetch(`/jobs/${jobId}/jobstates`, {
@@ -49,18 +29,6 @@ async function removeJobStateFromJob(jobId, jobStateId, csrfToken) {
     return response.json();
 }
 
-async function handleSubmitJob(event) {
-    event.preventDefault();
-    const jobName = document.getElementById('jobName').value;
-    const csrfToken = await fetchCsrfToken();
-    const createdJob = await createJob(jobName, csrfToken);
-    if (createdJob.id) {
-        loadJobs();
-        document.getElementById('jobForm').reset();
-        document.getElementById('jobForm').classList.add('d-none');
-        document.getElementById('showJobFormButton').style.display = 'inline-block';
-    }
-}
 
 async function handleSubmitJobState(event) {
     event.preventDefault();

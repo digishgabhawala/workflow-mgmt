@@ -6,8 +6,6 @@
     <title>Workflow Management System</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-timepicker/1.13.18/jquery.timepicker.min.css" />-->
-
     <style>
         .btn-block {
             width: 100%;
@@ -37,6 +35,14 @@
         <div class="form-group">
             <label for="jobName">Job Name:</label>
             <input type="text" id="jobName" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="startState">Start State:</label>
+            <select id="startState" class="form-control" required></select>
+        </div>
+        <div class="form-group">
+            <label for="endState">End State:</label>
+            <select id="endState" class="form-control" required></select>
         </div>
         <button type="submit" class="btn btn-primary">Create Job</button>
     </form>
@@ -85,10 +91,9 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-timepicker/1.13.18/jquery.timepicker.min.js"></script>-->
-<script src="jobs1.js"></script>
-<script src="jobstates.js"></script>
 <script src="loadjobs.js"></script>
+<script src="jobstates.js"></script>
 <script src="jobs.js"></script>
+<script src="jobs1.js"></script>
 </body>
 </html>

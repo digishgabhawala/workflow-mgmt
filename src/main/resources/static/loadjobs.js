@@ -17,6 +17,16 @@ async function loadJobs() {
     });
 
     loadJobStates(); // Ensure job states are loaded after jobs
+    populateJobStateDropdowns(); // Populate dropdowns for start and end states
+}
+
+function populateJobStateDropdowns() {
+    const jobStateSelectElements = ['startState', 'endState'];
+    jobStateSelectElements.forEach(async (elementId) => {
+        const selectElement = document.getElementById(elementId);
+        const jobStates = await fetchJobStates();
+        selectElement.innerHTML = generateJobStateOptions(jobStates);
+    });
 }
 
 function filterJobStates(jobStates, job) {
@@ -44,12 +54,28 @@ function generateJobStateOptions(states) {
 }
 
 function generateJobStatesList(job) {
-    return job.jobStates.map(state => `
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            ${state.name}
-            <button class="btn btn-sm btn-danger ml-2" onclick="handleRemoveJobState(event, ${job.id}, ${state.id})">Remove</button>
-        </li>
-    `).join('');
+    const startStateId = job.startState.id;
+    const endStateId = job.endState.id;
+
+    return job.jobStates.map(state => {
+        let removeButton = ''; // Initialize removeButton variable
+
+        // Check if the state is the start or end state
+        if (state.id === startStateId || state.id === endStateId) {
+            // Disable the remove button if it's the start or end state
+            removeButton = `<button class="btn btn-sm btn-danger ml-2" disabled>Remove</button>`;
+        } else {
+            // Render the remove button normally if it's not the start or end state
+            removeButton = `<button class="btn btn-sm btn-danger ml-2" onclick="handleRemoveJobState(event, ${job.id}, ${state.id})">Remove</button>`;
+        }
+
+        return `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                ${state.name}
+                ${removeButton}
+            </li>
+        `;
+    }).join('');
 }
 
 function generateTransitionsList(job, jobStates) {
@@ -115,4 +141,52 @@ function createJobRow(job, jobStateOptions, jobTransitionOptions, jobStatesList,
         </td>
     `;
     return row;
+}
+
+async function handleSubmitJob(event) {
+    event.preventDefault();
+
+    const jobName = document.getElementById('jobName').value;
+    const startStateId = document.getElementById('startState').value;
+    const endStateId = document.getElementById('endState').value;
+    const csrfToken = await fetchCsrfToken();
+
+    const job = {
+        name: jobName,
+        startState: { id: startStateId }, // Pass startState and endState as objects
+        endState: { id: endStateId }
+    };
+
+    try {
+        response = await createJob(job, csrfToken);
+        if(response.id){
+            loadJobs();
+            document.getElementById('jobForm').reset();
+            document.getElementById('jobForm').classList.add('d-none');
+            document.getElementById('showJobFormButton').style.display = 'inline-block';
+        } else if(response.message){
+            alert (response.message);
+        }
+    } catch (error) {
+        console.error('Error creating job:', error);
+        alert('Failed to create job. Please try again.');
+    }
+}
+
+async function createJob(job, csrfToken) {
+    const response = await fetch('/jobs', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify(job)
+    });
+
+    return response.json();
+}
+async function fetchJobs() {
+    const response = await fetch('/jobs');
+    const data = await response.json();
+    return data;
 }

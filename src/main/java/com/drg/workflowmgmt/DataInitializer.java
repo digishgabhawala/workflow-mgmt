@@ -1,8 +1,9 @@
 package com.drg.workflowmgmt;
-import com.drg.workflowmgmt.usermgmt.Role;
-import com.drg.workflowmgmt.usermgmt.RoleRepository;
-import com.drg.workflowmgmt.usermgmt.User;
-import com.drg.workflowmgmt.usermgmt.UserRepository;
+import com.drg.workflowmgmt.order.Audit;
+import com.drg.workflowmgmt.order.Order;
+import com.drg.workflowmgmt.order.OrderService;
+import com.drg.workflowmgmt.order.OwnerDetails;
+import com.drg.workflowmgmt.usermgmt.*;
 import com.drg.workflowmgmt.workflow.Job;
 import com.drg.workflowmgmt.workflow.JobService;
 import com.drg.workflowmgmt.workflow.JobState;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -22,10 +24,18 @@ import java.util.Set;
 public class DataInitializer {
     @Autowired
     private JobService jobService;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private OrderService orderService;
+
     @Bean
     public ApplicationRunner initializer(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         return args -> {initializeData(userRepository, roleRepository, passwordEncoder);
-        initJobs();};
+        initJobs();
+        initOrders();};
     }
 
     private void initJobs() {
@@ -95,5 +105,43 @@ public class DataInitializer {
         user1.setPassword(passwordEncoder.encode("u"));
         user1.setRoles(Set.of(userRoleFromDb));
         userRepository.save(user1);
+    }
+
+    private void initOrders() {
+        List<Job> jobs = jobService.getAllJobs();
+        List<JobState> jobStates = jobService.getAllJobStates();
+        List<User> users = userService.getAllUsers();
+
+        if (!jobs.isEmpty() && !jobStates.isEmpty() && !users.isEmpty()) {
+            // Create sample Order
+            Order order = new Order();
+            order.setOrderType(jobs.get(0)); // Assuming the first job is the type
+            order.setCurrentState(jobStates.get(0)); // Assuming the first state as the initial state
+            order.setCurrentUser(users.get(0)); // Assuming the first user as the current user
+
+            // Optional fields
+            OwnerDetails ownerDetails = new OwnerDetails();
+            ownerDetails.setOwnerName("John Doe");
+            ownerDetails.setOwnerAddress("123 Main St");
+            ownerDetails.setOwnerEmail("john.doe@example.com");
+            ownerDetails.setOwnerMobile("1234567890");
+            order.setOwnerDetails(ownerDetails);
+
+            order.setPriority(1); // Higher number means more priority
+            order.setNote("This is a sample order");
+
+            // Create and add audit items
+            Audit audit = new Audit();
+            audit.setUser(users.get(0));
+            audit.setUserRole("ROLE_USER");
+            audit.setFromState(jobStates.get(0));
+            audit.setToState(jobStates.get(1)); // Assuming the second state as the next state
+            audit.setNote("Initial audit item");
+
+            order.setAuditItems(List.of(audit));
+
+            // Save Order
+            orderService.createOrder(order);
+        }
     }
 }

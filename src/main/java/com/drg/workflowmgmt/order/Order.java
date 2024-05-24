@@ -4,6 +4,8 @@ import com.drg.workflowmgmt.usermgmt.User;
 import com.drg.workflowmgmt.workflow.Job;
 import com.drg.workflowmgmt.workflow.JobState;
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -35,6 +37,13 @@ public class Order {
     private Integer priority;
 
     private String note;
+
+    @Column(name = "timestamp")
+    private LocalDateTime timestamp; // New field for timestamp
+
+    public Order() {
+        this.timestamp = LocalDateTime.now();
+    }
 
     // Getters and setters
     // Constructor

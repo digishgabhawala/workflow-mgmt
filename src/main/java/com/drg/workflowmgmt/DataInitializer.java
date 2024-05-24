@@ -1,41 +1,52 @@
 package com.drg.workflowmgmt;
-import com.drg.workflowmgmt.order.Audit;
-import com.drg.workflowmgmt.order.Order;
-import com.drg.workflowmgmt.order.OrderService;
-import com.drg.workflowmgmt.order.OwnerDetails;
+
 import com.drg.workflowmgmt.usermgmt.*;
 import com.drg.workflowmgmt.workflow.Job;
 import com.drg.workflowmgmt.workflow.JobService;
 import com.drg.workflowmgmt.workflow.JobState;
+import com.drg.workflowmgmt.order.Audit;
+import com.drg.workflowmgmt.order.Order;
+import com.drg.workflowmgmt.order.OrderService;
+import com.drg.workflowmgmt.order.OwnerDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Configuration
 public class DataInitializer {
+
     @Autowired
     private JobService jobService;
 
     @Autowired
-    private UserService userService;
+    private OrderService orderService;
 
     @Autowired
-    private OrderService orderService;
+    private UserDetailsService userDetailsService;
+
+
+    @Autowired
+    private UserService userService;
 
     @Bean
     public ApplicationRunner initializer(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
-        return args -> {initializeData(userRepository, roleRepository, passwordEncoder);
-        initJobs();
-        initOrders();};
+        return args -> {
+            initializeData(userRepository, roleRepository, passwordEncoder);
+            initJobs();
+            initOrders();
+        };
     }
 
     private void initJobs() {
@@ -91,7 +102,7 @@ public class DataInitializer {
         User admin = new User();
         admin.setUsername("admin");
         admin.setPassword(passwordEncoder.encode("adminpass"));
-        admin.setRoles(Set.of(adminRoleFromDb, userRoleFromDb,drgRoleFromDb));
+        admin.setRoles(Set.of(adminRoleFromDb, userRoleFromDb, drgRoleFromDb));
         userRepository.save(admin);
 
         User user = new User();
@@ -107,19 +118,28 @@ public class DataInitializer {
         userRepository.save(user1);
     }
 
+    private void setSecurityContext(User user) {
+        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+    }
+
     private void initOrders() {
         List<Job> jobs = jobService.getAllJobs();
         List<JobState> jobStates = jobService.getAllJobStates();
         List<User> users = userService.getAllUsers();
 
         if (!jobs.isEmpty() && !jobStates.isEmpty() && !users.isEmpty()) {
+            // Simulate a logged-in user
+            User loggedInUser = users.get(0); // Use the first user for initialization
+            setSecurityContext(loggedInUser);
+
             // Create sample Order
             Order order = new Order();
             order.setOrderType(jobs.get(0)); // Assuming the first job is the type
             order.setCurrentState(jobStates.get(0)); // Assuming the first state as the initial state
-            order.setCurrentUser(users.get(0)); // Assuming the first user as the current user
 
-            // Optional fields
+            // Owner details
             OwnerDetails ownerDetails = new OwnerDetails();
             ownerDetails.setOwnerName("John Doe");
             ownerDetails.setOwnerAddress("123 Main St");
@@ -132,7 +152,7 @@ public class DataInitializer {
 
             // Create and add audit items
             Audit audit = new Audit();
-            audit.setUser(users.get(0));
+            audit.setUser(loggedInUser);
             audit.setUserRole("ROLE_USER");
             audit.setFromState(jobStates.get(0));
             audit.setToState(jobStates.get(1)); // Assuming the second state as the next state
@@ -141,7 +161,15 @@ public class DataInitializer {
             order.setAuditItems(List.of(audit));
 
             // Save Order
-            orderService.createOrder(order);
+            try {
+                orderService.createOrder(order);
+            } catch (IllegalArgumentException e) {
+                // Handle validation error
+                e.printStackTrace();
+            }
+
+            // Clear the security context after initialization
+            SecurityContextHolder.clearContext();
         }
     }
 }

@@ -1,12 +1,10 @@
 package com.drg.workflowmgmt.order;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/orders")
@@ -18,33 +16,42 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<List<Order>> getAllOrders() {
         List<Order> orders = orderService.getAllOrders();
-        return new ResponseEntity<>(orders, HttpStatus.OK);
+        return ResponseEntity.ok(orders);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Order> getOrderById(@PathVariable Long id) {
-        Optional<Order> order = orderService.getOrderById(id);
-        return order.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        Order order = orderService.getOrderById(id);
+        return ResponseEntity.ok(order);
     }
 
     @PostMapping
     public ResponseEntity<Order> createOrder(@RequestBody Order order) {
-        try {
-            Order createdOrder = orderService.createOrder(order);
-            return new ResponseEntity<>(createdOrder, HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        }
+        Order createdOrder = orderService.createOrder(order);
+        return ResponseEntity.status(201).body(createdOrder);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Order> updateOrder(@PathVariable Long id, @RequestBody Order orderDetails) {
-        try {
-            Order updatedOrder = orderService.updateOrder(id, orderDetails);
-            return new ResponseEntity<>(updatedOrder, HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        }
+    @PutMapping("/{id}/moveToState/{nextStateId}")
+    public ResponseEntity<Order> moveToState(@PathVariable Long id, @PathVariable Long nextStateId) {
+        Order updatedOrder = orderService.moveToState(id, nextStateId);
+        return ResponseEntity.ok(updatedOrder);
+    }
+
+    @PutMapping("/{id}/setNote")
+    public ResponseEntity<Order> setNote(@PathVariable Long id, @RequestBody String note) {
+        Order updatedOrder = orderService.setNote(id, note);
+        return ResponseEntity.ok(updatedOrder);
+    }
+
+    @PutMapping("/{id}/setOwnerDetails")
+    public ResponseEntity<Order> setOwnerDetails(@PathVariable Long id, @RequestBody OwnerDetails ownerDetails) {
+        Order updatedOrder = orderService.setOwnerDetails(id, ownerDetails);
+        return ResponseEntity.ok(updatedOrder);
+    }
+
+    @GetMapping("/myOrders")
+    public ResponseEntity<List<Order>> getOrdersForCurrentUser() {
+        List<Order> orders = orderService.getOrdersForCurrentUser();
+        return ResponseEntity.ok(orders);
     }
 }

@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -72,6 +73,11 @@ public class UserService {
         userDto.setRoles(new ArrayList<>(user.getRoles()));
         return userDto;
     }
+
+    public Optional<User> findByUsername(String loggedInUsername) {
+        return userRepository.findByUsername(loggedInUsername);
+    }
+
     public class UserWithRolesDto {
         private Long id;
         private String username;

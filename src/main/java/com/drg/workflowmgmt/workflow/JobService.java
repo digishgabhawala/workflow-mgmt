@@ -20,7 +20,16 @@ public class JobService {
         return jobRepository.findAll();
     }
 
-    public Job createJob(Job job) {
+    public Job createJob(Job job, JobState startState, JobState endState) {
+        if (startState == null || endState == null) {
+            throw new IllegalArgumentException("Start state and end state are required");
+        }
+
+        job.setStartState(startState);
+        job.setEndState(endState);
+        job.getJobStates().add(startState);
+        job.getJobStates().add(endState);
+
         return jobRepository.save(job);
     }
 
@@ -37,10 +46,9 @@ public class JobService {
         return null;
     }
 
-    public Job removeJobStateFromJob(Long jobId, JobState jobState) throws IllegalArgumentException {
+    public Job removeJobStateFromJob(Long jobId, JobState jobState) {
         Job job = jobRepository.findById(jobId).orElse(null);
         if (job != null) {
-            // Check if the state is used in any transitions
             if (job.getFromJobStateIds().contains(jobState.getId()) || job.getToJobStateIds().contains(jobState.getId())) {
                 throw new IllegalArgumentException("Cannot remove job state as it is used in transitions");
             }
@@ -66,7 +74,7 @@ public class JobService {
         return jobStateRepository.findByNameContaining(jobStateName);
     }
 
-    public Job addTransition(Long jobId, Long fromStateId, Long toStateId) throws IllegalArgumentException {
+    public Job addTransition(Long jobId, Long fromStateId, Long toStateId) {
         Optional<Job> jobOpt = jobRepository.findById(jobId);
         if (jobOpt.isPresent()) {
             Job job = jobOpt.get();
@@ -74,12 +82,9 @@ public class JobService {
             JobState toState = jobStateRepository.findById(toStateId).orElse(null);
 
             if (fromState != null && toState != null) {
-                // Validate that fromState and toState are not the same
                 if (fromStateId.equals(toStateId)) {
                     throw new IllegalArgumentException("From State and To State cannot be the same");
                 }
-
-                // Validate that the transition does not already exist
                 boolean transitionExists = false;
                 for (int i = 0; i < job.getFromJobStateIds().size(); i++) {
                     if (job.getFromJobStateIds().get(i).equals(fromStateId) && job.getToJobStateIds().get(i).equals(toStateId)) {
@@ -90,8 +95,6 @@ public class JobService {
                 if (transitionExists) {
                     throw new IllegalArgumentException("This transition already exists");
                 }
-
-                // Add the transition
                 job.getFromJobStateIds().add(fromStateId);
                 job.getToJobStateIds().add(toStateId);
                 jobRepository.save(job);
@@ -109,16 +112,13 @@ public class JobService {
             List<Long> fromStateIds = job.getFromJobStateIds();
             List<Long> toStateIds = job.getToJobStateIds();
 
-            // Find all occurrences of the transition in the job
             for (int i = 0; i < fromStateIds.size(); i++) {
                 if (fromStateIds.get(i).equals(fromStateId) && toStateIds.get(i).equals(toStateId)) {
                     indexesToRemove.add(i);
                 }
             }
 
-            // Remove the transition from the job
             if (!indexesToRemove.isEmpty()) {
-                // Remove transitions in reverse order to avoid index shift
                 for (int i = indexesToRemove.size() - 1; i >= 0; i--) {
                     int index = indexesToRemove.get(i);
                     fromStateIds.remove(index);
@@ -130,6 +130,7 @@ public class JobService {
         }
         return null;
     }
+
     public JobState updateJobState(Long id, JobState jobStateDetails) {
         JobState jobState = jobStateRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("JobState not found"));
         jobState.setName(jobStateDetails.getName());

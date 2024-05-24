@@ -21,9 +21,17 @@ public class JobController {
     }
 
     @PostMapping
-    public ResponseEntity<Job> createJob(@RequestBody Job job) {
-        Job createdJob = jobService.createJob(job);
-        return new ResponseEntity<>(createdJob, HttpStatus.CREATED);
+    public ResponseEntity<?> createJob(@RequestBody JobRequest jobRequest) {
+        try {
+            JobState startState = jobService.createJobState(jobRequest.getStartState());
+            JobState endState = jobService.createJobState(jobRequest.getEndState());
+            Job job = new Job();
+            job.setName(jobRequest.getName());
+            Job createdJob = jobService.createJob(job, startState, endState);
+            return new ResponseEntity<>(createdJob, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST));
+        }
     }
 
     @GetMapping("/{id}")
@@ -77,6 +85,36 @@ public class JobController {
             return new ResponseEntity<>(updatedJob, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    public static class JobRequest {
+        private String name;
+        private JobState startState;
+        private JobState endState;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public JobState getStartState() {
+            return startState;
+        }
+
+        public void setStartState(JobState startState) {
+            this.startState = startState;
+        }
+
+        public JobState getEndState() {
+            return endState;
+        }
+
+        public void setEndState(JobState endState) {
+            this.endState = endState;
         }
     }
 

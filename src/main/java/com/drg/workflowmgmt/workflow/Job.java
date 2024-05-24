@@ -1,13 +1,6 @@
 package com.drg.workflowmgmt.workflow;
-import jakarta.persistence.*;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
 
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,12 +17,22 @@ public class Job {
             name = "job_jobstate",
             joinColumns = @JoinColumn(name = "job_id"),
             inverseJoinColumns = @JoinColumn(name = "jobstate_id"))
-    private List<JobState> jobStates;
+    private List<JobState> jobStates = new ArrayList<>();
+
     @ElementCollection
     private List<Long> fromJobStateIds = new ArrayList<>();
 
     @ElementCollection
     private List<Long> toJobStateIds = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "start_state_id", nullable = false)
+    private JobState startState;
+
+    @ManyToOne
+    @JoinColumn(name = "end_state_id", nullable = false)
+    private JobState endState;
+
     // Constructors, getters, setters
 
     public Long getId() {
@@ -55,6 +58,7 @@ public class Job {
     public void setJobStates(List<JobState> jobStates) {
         this.jobStates = jobStates;
     }
+
     public List<Long> getFromJobStateIds() {
         return fromJobStateIds;
     }
@@ -69,5 +73,21 @@ public class Job {
 
     public void setToJobStateIds(List<Long> toJobStateIds) {
         this.toJobStateIds = toJobStateIds;
+    }
+
+    public JobState getStartState() {
+        return startState;
+    }
+
+    public void setStartState(JobState startState) {
+        this.startState = startState;
+    }
+
+    public JobState getEndState() {
+        return endState;
+    }
+
+    public void setEndState(JobState endState) {
+        this.endState = endState;
     }
 }

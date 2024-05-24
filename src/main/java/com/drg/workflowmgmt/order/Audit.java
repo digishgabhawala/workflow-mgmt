@@ -4,6 +4,8 @@ import com.drg.workflowmgmt.usermgmt.User;
 import com.drg.workflowmgmt.workflow.JobState;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 public class Audit {
 
@@ -24,6 +26,13 @@ public class Audit {
     @ManyToOne
     @JoinColumn(name = "to_state_id")
     private JobState toState;
+
+    @Column(name = "timestamp")
+    private LocalDateTime timestamp;
+
+    public Audit() {
+        this.timestamp = LocalDateTime.now();
+    }
 
     private String note;
 

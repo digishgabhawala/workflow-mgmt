@@ -60,6 +60,7 @@ public class OrderService {
                 .filter(index -> job.getFromJobStateIds().get(index).equals(currentState.getId()))
                 .boxed()
                 .collect(Collectors.toList());
+
         // Step 5: Get the corresponding IDs of toJobStateIds using the indexes
         List<Long> nextStateIds = fromStateIndexes.stream()
                 .map(index -> job.getToJobStateIds().get(index))
@@ -75,6 +76,12 @@ public class OrderService {
                 .orElseThrow(() -> new IllegalArgumentException("State not found"));
 
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        // Step 8: Check if the current user's role is allowed for the next state
+        if (!nextState.getRoles().contains(currentUser.getRoles().iterator().next().getName())) {
+            throw new IllegalArgumentException("Current user's role is not allowed for the next state.");
+        }
+
         Audit audit = new Audit();
         audit.setUser(currentUser);
         audit.setUserRole(currentUser.getRoles().iterator().next().getName());
@@ -85,9 +92,10 @@ public class OrderService {
 
         order.setCurrentState(nextState);
 
-        // Step 8: Save and return the updated order
+        // Step 9: Save and return the updated order
         return orderRepository.save(order);
     }
+
 
     public Order setNote(Long orderId, String note) {
         Order order = getOrderById(orderId);

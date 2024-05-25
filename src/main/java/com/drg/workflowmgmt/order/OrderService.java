@@ -2,9 +2,7 @@ package com.drg.workflowmgmt.order;
 
 import com.drg.workflowmgmt.usermgmt.User;
 import com.drg.workflowmgmt.usermgmt.UserRepository;
-import com.drg.workflowmgmt.workflow.Job;
-import com.drg.workflowmgmt.workflow.JobState;
-import com.drg.workflowmgmt.workflow.JobStateRepository;
+import com.drg.workflowmgmt.workflow.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -25,6 +23,9 @@ public class OrderService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private JobService jobService;
+
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }
@@ -38,6 +39,8 @@ public class OrderService {
             throw new IllegalArgumentException("Order type and start state are required");
         }
 
+        Job orderTypeJob = jobService.getJob(order.getOrderType().getId());
+        order.setOrderType(orderTypeJob);
         // Set the current state to the retrieved start state
         order.setCurrentState(order.getOrderType().getStartState());
 

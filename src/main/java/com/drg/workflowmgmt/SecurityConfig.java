@@ -64,7 +64,7 @@ public class SecurityConfig {
     @Bean
     public SavedRequestAwareAuthenticationSuccessHandler successHandler() {
         SavedRequestAwareAuthenticationSuccessHandler handler = new SavedRequestAwareAuthenticationSuccessHandler();
-        handler.setDefaultTargetUrl("/index.html");
+        handler.setDefaultTargetUrl("/myorders.html");
         return handler;
     }
 

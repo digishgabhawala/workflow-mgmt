@@ -4,41 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Orders</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-<h1>My Orders</h1>
-<table id="myOrdersTable">
-    <thead>
-    <tr>
-        <th>Order ID</th>
-        <th>Order Type</th>
-        <th>Current State</th>
-        <th>Note</th>
-        <th>Owner Details</th>
-    </tr>
-    </thead>
-    <tbody>
-    <!-- My Orders will be populated here -->
-    </tbody>
-</table>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mt-3 mb-4">
+        <h1 id="userName">Hello: [Loading...]</h1>
+        <button id="logoutButton" class="btn btn-danger">Logout</button>
+    </div>
 
-<h1>Available Orders For Me</h1>
-<table id="availableOrdersTable">
-    <thead>
-    <tr>
-        <th>Order ID</th>
-        <th>Order Type</th>
-        <th>Current State</th>
-        <th>Note</th>
-        <th>Owner Details</th>
-        <th>Action</th>
-    </tr>
-    </thead>
-    <tbody>
-    <!-- Available Orders will be populated here -->
-    </tbody>
-</table>
+    <h1 class="mt-5">My Orders</h1>
+    <table id="myOrdersTable" class="table table-bordered">
+        <thead>
+        <tr>
+            <th>Order ID</th>
+            <th>Order Type</th>
+            <th>Current State</th>
+            <th>Note</th>
+            <th>Owner Details</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- My Orders will be populated here -->
+        </tbody>
+    </table>
+
+    <h1 class="mt-5">Available Orders For Me</h1>
+    <table id="availableOrdersTable" class="table table-bordered">
+        <thead>
+        <tr>
+            <th>Order ID</th>
+            <th>Order Type</th>
+            <th>Current State</th>
+            <th>Note</th>
+            <th>Owner Details</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Available Orders will be populated here -->
+        </tbody>
+    </table>
+</div>
 
 <script src="myorders.js"></script>
 </body>

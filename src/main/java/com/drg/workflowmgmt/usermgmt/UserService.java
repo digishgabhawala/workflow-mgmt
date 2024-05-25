@@ -1,6 +1,7 @@
 package com.drg.workflowmgmt.usermgmt;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -76,6 +77,12 @@ public class UserService {
 
     public Optional<User> findByUsername(String loggedInUsername) {
         return userRepository.findByUsername(loggedInUsername);
+    }
+
+    public User getCurrentUser(){
+        org.springframework.security.core.userdetails.User user = (org.springframework.security.core.userdetails.User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser =  userRepository.findByUsername(user.getUsername()).get();
+        return currentUser;
     }
 
     public class UserWithRolesDto {

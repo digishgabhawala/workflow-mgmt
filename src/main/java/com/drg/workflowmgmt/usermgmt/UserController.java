@@ -5,7 +5,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")
@@ -62,6 +65,21 @@ public class UserController {
         Role role = userService.getRole(id);
         if (role != null) {
             return new ResponseEntity<>(role, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+
+    @GetMapping("/details")
+    public ResponseEntity<UserDto> getCurrentUserDetails() {
+        User user= userService.getCurrentUser();
+        if (user != null) {
+            UserDto userDto = new UserDto();
+            userDto.setId(user.getId());
+            userDto.setUsername(user.getUsername());
+            userDto.setRoles(user.getRoles().stream().map(Role::getName).collect(Collectors.toSet()));
+            return new ResponseEntity<>(userDto, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

@@ -3,6 +3,7 @@ package com.drg.workflowmgmt.order;
 import com.drg.workflowmgmt.usermgmt.Role;
 import com.drg.workflowmgmt.usermgmt.User;
 import com.drg.workflowmgmt.usermgmt.UserRepository;
+import com.drg.workflowmgmt.usermgmt.UserService;
 import com.drg.workflowmgmt.workflow.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,10 +24,12 @@ public class OrderService {
     private JobStateRepository jobStateRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
 
     @Autowired
     private JobService jobService;
+
+
 
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
@@ -69,11 +72,7 @@ public class OrderService {
         JobState nextState = jobStateRepository.findById(nextStateId)
                 .orElseThrow(() -> new IllegalArgumentException("State not found"));
 
-        User currentUser = getCurrentUser();
-
-        if (!nextState.getRoles().contains(currentUser.getRoles().iterator().next().getName())) {
-            throw new IllegalArgumentException("Current user's role is not allowed for the next state.");
-        }
+        User currentUser = userService.getCurrentUser();
 
         Audit audit = new Audit();
         audit.setUser(currentUser);
@@ -101,17 +100,12 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
-    private User getCurrentUser(){
-        org.springframework.security.core.userdetails.User user = (org.springframework.security.core.userdetails.User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User currentUser =  userRepository.findByUsername(user.getUsername()).get();
-        return currentUser;
-    }
     public List<Order> getOrdersForCurrentUser() {
-        return orderRepository.findByCurrentUser(getCurrentUser());
+        return orderRepository.findByCurrentUser(userService.getCurrentUser());
     }
 
     public List<Order> getAvailableOrdersForMe() {
-        User currentUser = getCurrentUser();
+        User currentUser = userService.getCurrentUser();
         List<String> currentUserRoles = currentUser.getRoles().stream().map(Role::getName).collect(Collectors.toList());
 
         // Fetch unassigned orders for each role of the current user
@@ -122,7 +116,7 @@ public class OrderService {
     }
 
     public void assignOrderToMe(Long orderId) {
-        User currentUser = getCurrentUser();
+        User currentUser = userService.getCurrentUser();
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found"));
 

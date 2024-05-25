@@ -20,9 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Configuration
 public class DataInitializer {
@@ -41,10 +39,11 @@ public class DataInitializer {
     private UserService userService;
 
     @Bean
+    @Transactional
     public ApplicationRunner initializer(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         return args -> {
             initializeData(userRepository, roleRepository, passwordEncoder);
-            initJobs();
+            JobsInitializer.initJobs(jobService,userService);
             initOrders();
         };
     }
@@ -93,46 +92,43 @@ public class DataInitializer {
     }
 
 
-    @Transactional
     public void initializeData(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         // Create roles
         Role adminRole = new Role();
         adminRole.setName("ROLE_ADMIN");
-        Role userRole = new Role();
-        userRole.setName("ROLE_USER");
-        Role drgRole = new Role();
-        drgRole.setName("ROLE_drg");
+        Role customerRole = new Role();
+        customerRole.setName("ROLE_CUSTOMER");
+        Role waiterRole = new Role();
+        waiterRole.setName("ROLE_WAITER");
+        Role cookRole = new Role();
+        cookRole.setName("ROLE_COOK");
+        Role billerRole = new Role();
+        billerRole.setName("ROLE_BILLER");
 
         // Save roles
-        roleRepository.save(adminRole);
-        roleRepository.save(userRole);
-        roleRepository.save(drgRole);
+        roleRepository.saveAll(Arrays.asList(adminRole, customerRole, waiterRole, cookRole, billerRole));
 
         // Retrieve roles to ensure they are managed by the current session
         Role adminRoleFromDb = roleRepository.findByName("ROLE_ADMIN").orElseThrow(() -> new RuntimeException("ROLE_ADMIN not found"));
-        Role userRoleFromDb = roleRepository.findByName("ROLE_USER").orElseThrow(() -> new RuntimeException("ROLE_USER not found"));
-        Role drgRoleFromDb = roleRepository.findByName("ROLE_drg").orElseThrow(() -> new RuntimeException("ROLE_drg not found"));
+        Role customerRoleFromDb = roleRepository.findByName("ROLE_CUSTOMER").orElseThrow(() -> new RuntimeException("ROLE_CUSTOMER not found"));
+        Role waiterRoleFromDb = roleRepository.findByName("ROLE_WAITER").orElseThrow(() -> new RuntimeException("ROLE_WAITER not found"));
+        Role cookRoleFromDb = roleRepository.findByName("ROLE_COOK").orElseThrow(() -> new RuntimeException("ROLE_COOK not found"));
+        Role billerRoleFromDb = roleRepository.findByName("ROLE_BILLER").orElseThrow(() -> new RuntimeException("ROLE_BILLER not found"));
 
         // Create users with managed roles
-        User admin = new User();
-        admin.setUsername("admin");
-        admin.setPassword(passwordEncoder.encode("adminpass"));
-        admin.setRoles(Set.of(adminRoleFromDb, userRoleFromDb, drgRoleFromDb));
-        userRepository.save(admin);
-
-        User user = new User();
-        user.setUsername("drg");
-        user.setPassword(passwordEncoder.encode("drg"));
-        user.setRoles(Set.of(drgRoleFromDb));
-        userRepository.save(user);
-
-        User user1 = new User();
-        user1.setUsername("u");
-        user1.setPassword(passwordEncoder.encode("u"));
-        user1.setRoles(Set.of(userRoleFromDb));
-        userRepository.save(user1);
+        createUser(userRepository, passwordEncoder, "admin", adminRoleFromDb);
+        createUser(userRepository, passwordEncoder, "customer", customerRoleFromDb);
+        createUser(userRepository, passwordEncoder, "waiter", waiterRoleFromDb);
+        createUser(userRepository, passwordEncoder, "cook", cookRoleFromDb);
+        createUser(userRepository, passwordEncoder, "biller", billerRoleFromDb);
     }
-
+    private void createUser(UserRepository userRepository, PasswordEncoder passwordEncoder, String username, Role role) {
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(passwordEncoder.encode(username+"_"+"drg"));
+        user.setRoles(Set.of(role));
+        userRepository.save(user);
+    }
     private void setSecurityContext(User user) {
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -187,4 +183,7 @@ public class DataInitializer {
             SecurityContextHolder.clearContext();
         }
     }
+
+
+
 }

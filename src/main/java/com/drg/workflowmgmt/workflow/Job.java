@@ -19,10 +19,10 @@ public class Job {
             inverseJoinColumns = @JoinColumn(name = "jobstate_id"))
     private List<JobState> jobStates = new ArrayList<>();
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     private List<Long> fromJobStateIds = new ArrayList<>();
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     private List<Long> toJobStateIds = new ArrayList<>();
 
     @ManyToOne

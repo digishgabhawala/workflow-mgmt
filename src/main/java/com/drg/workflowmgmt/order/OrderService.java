@@ -1,5 +1,6 @@
 package com.drg.workflowmgmt.order;
 
+import com.drg.workflowmgmt.usermgmt.Role;
 import com.drg.workflowmgmt.usermgmt.User;
 import com.drg.workflowmgmt.usermgmt.UserRepository;
 import com.drg.workflowmgmt.workflow.*;
@@ -7,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -35,52 +37,40 @@ public class OrderService {
     }
 
     public Order createOrder(Order order) {
-        if (order.getOrderType() == null ) {
+        if (order.getOrderType() == null) {
             throw new IllegalArgumentException("Order type and start state are required");
         }
 
         Job orderTypeJob = jobService.getJob(order.getOrderType().getId());
         order.setOrderType(orderTypeJob);
-        // Set the current state to the retrieved start state
         order.setCurrentState(order.getOrderType().getStartState());
 
-        // Save the order
         return orderRepository.save(order);
     }
 
     public Order moveToState(Long orderId, Long nextStateId) {
-        // Step 1: Find the order by its ID
         Order order = getOrderById(orderId);
-
-        // Step 2: Get the job associated with the order type
         Job job = order.getOrderType();
-
-        // Step 3: Find the current state of the order
         JobState currentState = order.getCurrentState();
 
-        // Step 4: Retrieve all indexes of fromJobStateIds based on the current state
         List<Integer> fromStateIndexes = IntStream.range(0, job.getFromJobStateIds().size())
                 .filter(index -> job.getFromJobStateIds().get(index).equals(currentState.getId()))
                 .boxed()
                 .collect(Collectors.toList());
 
-        // Step 5: Get the corresponding IDs of toJobStateIds using the indexes
         List<Long> nextStateIds = fromStateIndexes.stream()
                 .map(index -> job.getToJobStateIds().get(index))
                 .collect(Collectors.toList());
 
-        // Step 6: Validate if the provided nextStateId is part of the list of valid transition states
         if (!nextStateIds.contains(nextStateId)) {
             throw new IllegalArgumentException("Invalid transition state for the current order state.");
         }
 
-        // Step 7: Update the order's current state to the next state and add an audit item
         JobState nextState = jobStateRepository.findById(nextStateId)
                 .orElseThrow(() -> new IllegalArgumentException("State not found"));
 
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = getCurrentUser();
 
-        // Step 8: Check if the current user's role is allowed for the next state
         if (!nextState.getRoles().contains(currentUser.getRoles().iterator().next().getName())) {
             throw new IllegalArgumentException("Current user's role is not allowed for the next state.");
         }
@@ -94,11 +84,10 @@ public class OrderService {
         order.getAuditItems().add(audit);
 
         order.setCurrentState(nextState);
+        order.setCurrentUser(null);
 
-        // Step 9: Save and return the updated order
         return orderRepository.save(order);
     }
-
 
     public Order setNote(Long orderId, String note) {
         Order order = getOrderById(orderId);
@@ -112,8 +101,40 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
+    private User getCurrentUser(){
+        org.springframework.security.core.userdetails.User user = (org.springframework.security.core.userdetails.User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser =  userRepository.findByUsername(user.getUsername()).get();
+        return currentUser;
+    }
     public List<Order> getOrdersForCurrentUser() {
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return orderRepository.findByCurrentUser(currentUser);
+        return orderRepository.findByCurrentUser(getCurrentUser());
+    }
+
+    public List<Order> getAvailableOrdersForMe() {
+        User currentUser = getCurrentUser();
+        List<String> currentUserRoles = currentUser.getRoles().stream().map(Role::getName).collect(Collectors.toList());
+
+        // Fetch unassigned orders for each role of the current user
+        List<Long> stateIds = jobStateRepository.findStateIdsByRoles(currentUserRoles);
+        List<Order> availableOrders = orderRepository.findUnassignedOrdersByStateIds(stateIds);
+
+        return availableOrders;
+    }
+
+    public void assignOrderToMe(Long orderId) {
+        User currentUser = getCurrentUser();
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+
+        if (order.getCurrentUser() != null) {
+            throw new IllegalArgumentException("Order is already assigned to another user");
+        }
+
+        if (!order.getCurrentState().getRoles().contains(currentUser.getRoles().iterator().next().getName())) {
+            throw new IllegalArgumentException("Current user's role is not allowed for this order's current state.");
+        }
+
+        order.setCurrentUser(currentUser);
+        orderRepository.save(order);
     }
 }

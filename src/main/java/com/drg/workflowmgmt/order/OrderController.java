@@ -1,7 +1,7 @@
 package com.drg.workflowmgmt.order;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,44 +14,47 @@ public class OrderController {
     private OrderService orderService;
 
     @GetMapping
-    public ResponseEntity<List<Order>> getAllOrders() {
-        List<Order> orders = orderService.getAllOrders();
-        return ResponseEntity.ok(orders);
+    public List<Order> getAllOrders() {
+        return orderService.getAllOrders();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Order> getOrderById(@PathVariable Long id) {
-        Order order = orderService.getOrderById(id);
-        return ResponseEntity.ok(order);
+    public Order getOrderById(@PathVariable Long id) {
+        return orderService.getOrderById(id);
     }
 
     @PostMapping
-    public ResponseEntity<Order> createOrder(@RequestBody Order order) {
-        Order createdOrder = orderService.createOrder(order);
-        return ResponseEntity.status(201).body(createdOrder);
+    public Order createOrder(@RequestBody Order order) {
+        return orderService.createOrder(order);
     }
 
-    @PutMapping("/{id}/moveToState/{nextStateId}")
-    public ResponseEntity<Order> moveToState(@PathVariable Long id, @PathVariable Long nextStateId) {
-        Order updatedOrder = orderService.moveToState(id, nextStateId);
-        return ResponseEntity.ok(updatedOrder);
+    @PostMapping("/{id}/moveToState")
+    public Order moveToState(@PathVariable Long id, @RequestParam Long nextStateId) {
+        return orderService.moveToState(id, nextStateId);
     }
 
-    @PutMapping("/{id}/setNote")
-    public ResponseEntity<Order> setNote(@PathVariable Long id, @RequestBody String note) {
-        Order updatedOrder = orderService.setNote(id, note);
-        return ResponseEntity.ok(updatedOrder);
+    @PostMapping("/{id}/setNote")
+    public Order setNote(@PathVariable Long id, @RequestParam String note) {
+        return orderService.setNote(id, note);
     }
 
-    @PutMapping("/{id}/setOwnerDetails")
-    public ResponseEntity<Order> setOwnerDetails(@PathVariable Long id, @RequestBody OwnerDetails ownerDetails) {
-        Order updatedOrder = orderService.setOwnerDetails(id, ownerDetails);
-        return ResponseEntity.ok(updatedOrder);
+    @PostMapping("/{id}/setOwnerDetails")
+    public Order setOwnerDetails(@PathVariable Long id, @RequestBody OwnerDetails ownerDetails) {
+        return orderService.setOwnerDetails(id, ownerDetails);
     }
 
     @GetMapping("/myOrders")
-    public ResponseEntity<List<Order>> getOrdersForCurrentUser() {
-        List<Order> orders = orderService.getOrdersForCurrentUser();
-        return ResponseEntity.ok(orders);
+    public List<Order> getOrdersForCurrentUser() {
+        return orderService.getOrdersForCurrentUser();
+    }
+
+    @GetMapping("/availableOrdersForMe")
+    public List<Order> getAvailableOrdersForMe() {
+        return orderService.getAvailableOrdersForMe();
+    }
+
+    @PostMapping("/{id}/assignToMe")
+    public void assignOrderToMe(@PathVariable Long id) {
+        orderService.assignOrderToMe(id);
     }
 }

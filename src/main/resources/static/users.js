@@ -118,10 +118,19 @@ function showUserForm() {
     document.getElementById('userForm').classList.remove('d-none');
     document.getElementById('showUserFormButton').style.display = 'none';
 }
-
+function hideUserForm() {
+    document.getElementById('userForm').classList.add('d-none');
+    document.getElementById('userForm').reset();
+    document.getElementById('showUserFormButton').style.display = 'inline-block';
+}
 function showRoleForm() {
     document.getElementById('roleForm').classList.remove('d-none');
     document.getElementById('showRoleFormButton').style.display = 'none';
+}
+function hideRoleForm() {
+    document.getElementById('roleForm').classList.add('d-none');
+    document.getElementById('roleForm').reset();
+    document.getElementById('showRoleFormButton').style.display = 'inline-block';
 }
 
 async function loadUsers() {
@@ -138,7 +147,7 @@ async function loadUsers() {
             <td>
                 <button class="btn btn-sm btn-success" onclick="document.getElementById('addRoleForm-${user.id}').classList.toggle('d-none')">+ Add Role</button>
                 <form id="addRoleForm-${user.id}" class="form-inline mt-2 d-none" onsubmit="handleAddRole(event, ${user.id})">
-                    <select id="roleSelect-${user.id}" class="form-control mr-2">${getRoleOptions(roles)}</select>
+                    <select id="roleSelect-${user.id}" class="form-control mr-2">${getRoleOptions(roles,user.roles)}</select>
                     <button type="submit" class="btn btn-primary btn-sm">Add</button>
                 </form>
                 <button class="btn btn-sm btn-danger" onclick="handleDeleteUser(${user.id})">Delete</button>
@@ -176,8 +185,11 @@ function getUserRoles(user, roles) {
 }
 
 
-function getRoleOptions(roles) {
-    return roles.map(role => `<option value="${role.id}">${role.name}</option>`).join('');
+function getRoleOptions(allRoles,userRoles) {
+    const userRoleIds = userRoles.map(role => role.id);
+    const filteredRoles = allRoles.filter(role => !userRoleIds.includes(role.id));
+    return filteredRoles.map(role => `<option value="${role.id}">${role.name}</option>`).join('');
+//    return roles.map(role => `<option value="${role.id}">${role.name}</option>`).join('');
 }
 
 async function loadRoles() {
@@ -205,10 +217,10 @@ async function deleteUser(userId, csrfToken) {
     }
 }
 
-function handleDeleteUser(userId) {
-    const csrfToken = fetchCsrfToken();
+async function handleDeleteUser(userId) {
     const confirmation = confirm('Are you sure you want to delete this user?');
     if (confirmation) {
+        const csrfToken = await fetchCsrfToken();
         deleteUser(userId, csrfToken);
     }
 }

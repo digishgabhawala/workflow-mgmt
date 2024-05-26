@@ -187,4 +187,7 @@ public class OrderService {
         order.setCurrentUser(currentUser);
         orderRepository.save(order);
     }
+    public List<ArchivedOrder> getAllArchivedOrders() {
+        return archivedOrderRepository.findAll();
+    }
 }

@@ -1,6 +1,7 @@
 package com.drg.workflowmgmt.order;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,5 +57,11 @@ public class OrderController {
     @PostMapping("/{id}/assignToMe")
     public void assignOrderToMe(@PathVariable Long id) {
         orderService.assignOrderToMe(id);
+    }
+
+    @GetMapping("/archived")
+    public ResponseEntity<List<ArchivedOrder>> getAllArchivedOrders() {
+        List<ArchivedOrder> archivedOrders = orderService.getAllArchivedOrders();
+        return ResponseEntity.ok(archivedOrders);
     }
 }

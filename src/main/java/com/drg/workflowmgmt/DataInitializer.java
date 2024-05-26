@@ -48,50 +48,6 @@ public class DataInitializer {
         };
     }
 
-    private void initJobs() {
-        // Create sample JobStates
-        JobState startState = new JobState();
-        startState.setName("Start");
-        startState.setRoles(Arrays.asList("ROLE_ADMIN"));
-        startState.setEstimate(LocalTime.of(1, 0)); // 1 hour
-
-        JobState endState = new JobState();
-        endState.setName("End");
-        endState.setRoles(Arrays.asList("ROLE_ADMIN"));
-        endState.setEstimate(LocalTime.of(1, 30)); // 1 hour 30 minutes
-
-        // Create additional JobStates
-        JobState jobState1 = new JobState();
-        jobState1.setName("Pending");
-        jobState1.setRoles(Arrays.asList("ROLE_ADMIN"));
-        jobState1.setEstimate(LocalTime.of(2, 30)); // 2 hours 30 minutes
-
-        JobState jobState2 = new JobState();
-        jobState2.setName("Completed");
-        jobState2.setRoles(Arrays.asList("ROLE_ADMIN", "ROLE_ADMIN"));
-        jobState2.setEstimate(LocalTime.of(1, 0)); // 1 hour
-
-        // Save JobStates
-        startState = jobService.createJobState(startState);
-        endState = jobService.createJobState(endState);
-        jobState1 = jobService.createJobState(jobState1);
-        jobState2 = jobService.createJobState(jobState2);
-
-        // Create sample Job
-        Job job = new Job();
-        job.setName("Sample Job");
-
-        // Save Job with startState and endState
-        Job createdJob = jobService.createJob(job, startState, endState);
-
-        if (createdJob != null) {
-            // Add additional JobStates to Job
-            jobService.addJobStateToJob(createdJob.getId(), jobState1);
-            jobService.addJobStateToJob(createdJob.getId(), jobState2);
-        }
-    }
-
-
     public void initializeData(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         // Create roles
         Role adminRole = new Role();

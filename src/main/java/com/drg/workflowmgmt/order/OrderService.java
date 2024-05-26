@@ -110,6 +110,7 @@ public class OrderService {
             archivedOrder.setOrderType(order.getOrderType().getName());
             archivedOrder.setCurrentState(order.getCurrentState().getName());
             archivedOrder.setNote(order.getNote());
+            archivedOrder.setPriority(order.getPriority());
             if(null != order.getOwnerDetails() ){
                 OwnerDetails ownerDetails = new OwnerDetails();
                 ownerDetails.setOwnerName(order.getOwnerDetails().getOwnerName());
@@ -117,6 +118,7 @@ public class OrderService {
                 ownerDetails.setOwnerEmail(order.getOwnerDetails().getOwnerEmail());
                 ownerDetails.setOwnerMobile(order.getOwnerDetails().getOwnerMobile());
                 archivedOrder.setOwnerDetails(ownerDetails);
+                archivedOrder.setAmount(order.getAmount());
             }
 
             // Archive related audits

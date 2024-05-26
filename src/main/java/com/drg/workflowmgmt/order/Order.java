@@ -45,6 +45,9 @@ public class Order {
         this.timestamp = LocalDateTime.now();
     }
 
+    private Double amount; // New field for amount
+
+
     // Getters and setters
     // Constructor
 
@@ -112,6 +115,20 @@ public class Order {
         this.note = note;
     }
 
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
 
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public Double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Double amount) {
+        this.amount = amount;
+    }
 }
 

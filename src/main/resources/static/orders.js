@@ -103,15 +103,18 @@ async function handleSubmitOrder(event) {
     const ownerEmail = document.getElementById('ownerEmail').value;
     const ownerMobile = document.getElementById('ownerMobile').value;
     const note = document.getElementById('note').value;
+    const amount = document.getElementById('amount').value;
 
     const order = {
         orderType: { id: orderTypeId },
         priority: priority || 1,
+        amount: amount || null,
         ownerDetails: {
             ownerName: ownerName || null,
             ownerAddress: ownerAddress || null,
             ownerEmail: ownerEmail || null,
             ownerMobile: ownerMobile || null
+
         },
         note: note || null
     };
@@ -176,6 +179,7 @@ function createOrderRow(order) {
         <td>${order.ownerDetails ? order.ownerDetails.ownerEmail : 'N/A'}</td>
         <td>${order.ownerDetails ? order.ownerDetails.ownerMobile : 'N/A'}</td>
         <td>${order.priority ? order.priority : 'N/A'}</td>
+        <td>${order.amount ? order.amount : 'N/A'}</td>
         <td>${order.note ? order.note : 'N/A'}</td>
         <td><button class="btn btn-danger" onclick="deleteOrder(${order.id})">Delete</button></td>
     `;
@@ -220,7 +224,9 @@ function createArchiveOrderRow(archivedOrder) {
         <td>${archivedOrder.ownerDetails ? archivedOrder.ownerDetails.ownerAddress : 'N/A'}</td>
         <td>${archivedOrder.ownerDetails ? archivedOrder.ownerDetails.ownerEmail : 'N/A'}</td>
         <td>${archivedOrder.ownerDetails ? archivedOrder.ownerDetails.ownerMobile : 'N/A'}</td>
-        <td>N/A</td>
+        <td>${archivedOrder.priority}</td>
+        <td>${archivedOrder.amount}</td>
+        <td>${order.amount ? order.amount : 'N/A'}</td>
         <td>${archivedOrder.note ? archivedOrder.note : 'N/A'}</td>
     `;
     return row;

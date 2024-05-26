@@ -19,6 +19,10 @@ public class ArchivedOrder {
     @JoinColumn(name = "order_id")
     private List<ArchivedAudit> auditItems;
 
+    private Double amount; // New field for amount
+
+    private Integer priority;
+
     @Column(updatable = false)
     private LocalDateTime archivedAt = LocalDateTime.now();
 
@@ -79,5 +83,21 @@ public class ArchivedOrder {
 
     public void setOwnerDetails(OwnerDetails ownerDetails) {
         this.ownerDetails = ownerDetails;
+    }
+
+    public Double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Double amount) {
+        this.amount = amount;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
     }
 }

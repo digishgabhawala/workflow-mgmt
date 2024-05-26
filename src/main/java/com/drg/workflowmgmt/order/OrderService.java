@@ -139,7 +139,6 @@ public class OrderService {
             // Delete order and related audits
             auditRepository.deleteAll(audits);
             orderRepository.delete(order);
-            System.out.println("order deleted" + order.getId());
         } catch (Exception e) {
             // Handle exception
             e.printStackTrace();

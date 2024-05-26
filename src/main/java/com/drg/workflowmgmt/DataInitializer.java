@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
+import com.github.javafaker.Faker;
 
 import java.util.*;
 
@@ -165,9 +166,11 @@ public class DataInitializer {
         }
     }
 
-    private Order initTestOrder(Job orderType) {
 
-        // Simulate a logged-in user
+// Assuming other imports are present
+
+    private Order initTestOrder(Job orderType) {
+        Faker faker = new Faker();
 
         // Create sample Order
         Order order = new Order();
@@ -175,15 +178,16 @@ public class DataInitializer {
 
         // Owner details
         OwnerDetails ownerDetails = new OwnerDetails();
-        ownerDetails.setOwnerName("John Doe");
-        ownerDetails.setOwnerAddress("123 Main St");
-        ownerDetails.setOwnerEmail("john.doe@example.com");
-        ownerDetails.setOwnerMobile("1234567890");
+        ownerDetails.setOwnerName(faker.name().fullName());
+        ownerDetails.setOwnerAddress(faker.address().fullAddress());
+        ownerDetails.setOwnerEmail(faker.internet().emailAddress());
+        ownerDetails.setOwnerMobile(faker.phoneNumber().cellPhone());
+
         order.setOwnerDetails(ownerDetails);
 
-        order.setPriority(1); // Higher number means more priority
-        order.setAmount(10.0);
-        order.setNote("This is a sample order");
+        order.setPriority(faker.number().numberBetween(1, 3)); // Random priority between 1 and 10
+        order.setAmount(faker.number().randomDouble(0, 1, 100)); // Random amount between 1 and 1000 with 2 decimal places
+        order.setNote(faker.lorem().sentence()); // Random lorem sentence for note
 
         // Save Order
         try {

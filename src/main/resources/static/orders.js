@@ -114,7 +114,6 @@ async function handleSubmitOrder(event) {
             ownerAddress: ownerAddress || null,
             ownerEmail: ownerEmail || null,
             ownerMobile: ownerMobile || null
-
         },
         note: note || null
     };
@@ -167,20 +166,41 @@ async function fetchOrders() {
     }
 }
 
+// Function to format timestamp into 'DD-MM-YY HH:MM'
+function formatTimestamp(timestamp) {
+    const [year, month, day, hour, minute, second, nanosecond] = timestamp;
+    const formattedDate = new Date(year, month - 1, day, hour, minute, second, nanosecond / 1000000);
+    const dayStr = String(formattedDate.getDate()).padStart(2, '0');
+    const monthStr = String(formattedDate.getMonth() + 1).padStart(2, '0');
+    const yearStr = String(formattedDate.getFullYear()).slice(-2);
+    const hourStr = String(formattedDate.getHours()).padStart(2, '0');
+    const minuteStr = String(formattedDate.getMinutes()).padStart(2, '0');
+    return `${dayStr}-${monthStr}-${yearStr} ${hourStr}:${minuteStr}`;
+}
+
 // Function to create an order row element for the table
 function createOrderRow(order) {
+    const startTime = formatTimestamp(order.timestamp);
+    const endTime = startTime; // Initially set end time to start time
+
+    const ownerDetails = order.ownerDetails
+        ? `${order.ownerDetails.ownerName || 'N/A'}<br>
+           ${order.ownerDetails.ownerAddress || 'N/A'}<br>
+           ${order.ownerDetails.ownerEmail || 'N/A'}<br>
+           ${order.ownerDetails.ownerMobile || 'N/A'}`
+        : 'N/A';
+
     const row = document.createElement('tr');
     row.innerHTML = `
         <td>${order.id}</td>
         <td>${order.orderType.name}</td>
         <td>${order.currentState ? order.currentState.name : 'N/A'}</td>
-        <td>${order.ownerDetails ? order.ownerDetails.ownerName : 'N/A'}</td>
-        <td>${order.ownerDetails ? order.ownerDetails.ownerAddress : 'N/A'}</td>
-        <td>${order.ownerDetails ? order.ownerDetails.ownerEmail : 'N/A'}</td>
-        <td>${order.ownerDetails ? order.ownerDetails.ownerMobile : 'N/A'}</td>
+        <td>${ownerDetails}</td>
         <td>${order.priority ? order.priority : 'N/A'}</td>
         <td>${order.amount ? order.amount : 'N/A'}</td>
         <td>${order.note ? order.note : 'N/A'}</td>
+        <td>${startTime}</td>
+        <td>${endTime}</td>
         <td><button class="btn btn-danger" onclick="deleteOrder(${order.id})">Delete</button></td>
     `;
     return row;
@@ -215,15 +235,19 @@ function toggleOrderForm() {
 
 // Function to create a row for archived orders
 function createArchiveOrderRow(archivedOrder) {
+    const ownerDetails = archivedOrder.ownerDetails
+        ? `${archivedOrder.ownerDetails.ownerName || 'N/A'}<br>
+           ${archivedOrder.ownerDetails.ownerAddress || 'N/A'}<br>
+           ${archivedOrder.ownerDetails.ownerEmail || 'N/A'}<br>
+           ${archivedOrder.ownerDetails.ownerMobile || 'N/A'}`
+        : 'N/A';
+
     const row = document.createElement('tr');
     row.innerHTML = `
         <td>${archivedOrder.id}</td>
         <td>${archivedOrder.orderType}</td>
         <td>${archivedOrder.currentState}</td>
-        <td>${archivedOrder.ownerDetails ? archivedOrder.ownerDetails.ownerName : 'N/A'}</td>
-        <td>${archivedOrder.ownerDetails ? archivedOrder.ownerDetails.ownerAddress : 'N/A'}</td>
-        <td>${archivedOrder.ownerDetails ? archivedOrder.ownerDetails.ownerEmail : 'N/A'}</td>
-        <td>${archivedOrder.ownerDetails ? archivedOrder.ownerDetails.ownerMobile : 'N/A'}</td>
+        <td>${ownerDetails}</td>
         <td>${archivedOrder.priority}</td>
         <td>${archivedOrder.amount}</td>
         <td>${archivedOrder.note ? archivedOrder.note : 'N/A'}</td>
@@ -244,7 +268,6 @@ async function loadArchivedOrders() {
         });
 
         // Show the archived order table and hide the main order table
-//        document.getElementById('orderTableBody').parentNode.parentNode.classList.add('d-none');
         document.getElementById('archivedOrderTable').classList.remove('d-none');
     } catch (error) {
         console.error('Error loading archived orders:', error);
@@ -266,4 +289,3 @@ async function fetchArchivedOrders() {
         throw new Error('Failed to fetch archived orders');
     }
 }
-

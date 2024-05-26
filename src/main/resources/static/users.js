@@ -136,12 +136,14 @@ async function loadUsers() {
             <td>${user.username}</td>
             <td>${getUserRoles(user, roles)}</td>
             <td>
-                <button class="btn btn-sm btn-success" onclick="document.getElementById('addRoleForm-${user.id}').classList.toggle('d-none')">+</button>
+                <button class="btn btn-sm btn-success" onclick="document.getElementById('addRoleForm-${user.id}').classList.toggle('d-none')">+ Add Role</button>
                 <form id="addRoleForm-${user.id}" class="form-inline mt-2 d-none" onsubmit="handleAddRole(event, ${user.id})">
                     <select id="roleSelect-${user.id}" class="form-control mr-2">${getRoleOptions(roles)}</select>
                     <button type="submit" class="btn btn-primary btn-sm">Add</button>
                 </form>
+                <button class="btn btn-sm btn-danger" onclick="handleDeleteUser(${user.id})">Delete</button>
             </td>
+
         `;
         tableBody.appendChild(row);
     });
@@ -187,6 +189,28 @@ async function loadRoles() {
         row.innerHTML = `<td>${role.id}</td><td>${role.name}</td>`;
         tableBody.appendChild(row);
     });
+}
+
+async function deleteUser(userId, csrfToken) {
+    const response = await fetch(`/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken
+        }
+    });
+    if (response.ok) {
+        loadUsers();
+    } else {
+        alert('Failed to delete user');
+    }
+}
+
+function handleDeleteUser(userId) {
+    const csrfToken = fetchCsrfToken();
+    const confirmation = confirm('Are you sure you want to delete this user?');
+    if (confirmation) {
+        deleteUser(userId, csrfToken);
+    }
 }
 
 window.onload = async function() {

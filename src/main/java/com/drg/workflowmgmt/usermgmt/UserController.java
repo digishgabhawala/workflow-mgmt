@@ -84,6 +84,16 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+    // Add this method to UserController
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<String> deleteUser(@PathVariable Long userId) {
+        boolean deleted = userService.deleteUser(userId);
+        if (deleted) {
+            return new ResponseEntity<>("User deleted successfully", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+        }
+    }
 
 
 }

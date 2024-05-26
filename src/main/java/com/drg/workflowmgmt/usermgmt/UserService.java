@@ -43,8 +43,12 @@ public class UserService {
         return roleRepository.findAll();
     }
 
-    public Role createRole(Role role) {
-        return roleRepository.save(role);
+    public Role createRole(Role role)
+    {
+        Role createdRole =  roleRepository.save(role);
+        User admin = userRepository.findByUsername("admin").get();
+        addRoleToUser(admin.getId(),createdRole.getId());
+        return createdRole;
     }
 
     public Role getRole(Long id) {
@@ -84,6 +88,17 @@ public class UserService {
         User currentUser =  userRepository.findByUsername(user.getUsername()).get();
         return currentUser;
     }
+
+    // Add this method to UserService
+    public boolean deleteUser(Long userId) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isPresent()) {
+            userRepository.deleteById(userId);
+            return true;
+        }
+        return false;
+    }
+
 
     public class UserWithRolesDto {
         private Long id;

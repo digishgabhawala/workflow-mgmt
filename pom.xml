@@ -12,6 +12,7 @@
 		<spring-boot.version>3.2.5</spring-boot.version>
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
+		<start-class>com.drg.workflowmgmt.WorkflowMgmtApplication</start-class>
 	</properties>
 
 	<dependencies>
@@ -77,6 +78,24 @@
 						<arg>-parameters</arg>
 					</compilerArgs>
 				</configuration>
-			</plugin>		</plugins>
+			</plugin>
+
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<mainClass>com.drg.workflowmgmt.WorkflowMgmtApplication</mainClass>
+					<layout>JAR</layout>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
 	</build>
 </project>

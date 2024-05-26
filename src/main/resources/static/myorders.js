@@ -1,13 +1,13 @@
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const csrfToken = await fetchCsrfToken();
-        await loadUserName();
+//        await loadUserName();
         await loadMyOrders(csrfToken);
         await loadAvailableOrders(csrfToken);
 
-        document.getElementById('logoutButton').addEventListener('click', async () => {
-            await logout(csrfToken);
-        });
+//        document.getElementById('logoutButton').addEventListener('click', async () => {
+//            await logout(csrfToken);
+//        });
     } catch (error) {
         console.error('Error loading orders:', error);
     }
@@ -27,45 +27,6 @@ async function fetchCsrfToken() {
     }
 }
 
-async function loadUserName() {
-    try {
-        const response = await fetch('/users/details', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch user details');
-        }
-
-        const user = await response.json();
-        document.getElementById('userName').textContent = `Hello: ${user.username}`;
-    } catch (error) {
-        console.error('Error loading user details:', error);
-    }
-}
-
-async function logout(csrfToken) {
-    try {
-        const response = await fetch('/logout', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
-            }
-        });
-
-        if (response.ok) {
-            window.location.href = '/login'; // Redirect to login page after logout
-        } else {
-            throw new Error('Failed to logout');
-        }
-    } catch (error) {
-        console.error('Error logging out:', error);
-    }
-}
 
 async function loadMyOrders(csrfToken) {
     try {

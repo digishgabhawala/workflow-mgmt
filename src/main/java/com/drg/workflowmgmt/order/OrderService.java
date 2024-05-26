@@ -5,6 +5,7 @@ import com.drg.workflowmgmt.usermgmt.User;
 import com.drg.workflowmgmt.usermgmt.UserRepository;
 import com.drg.workflowmgmt.usermgmt.UserService;
 import com.drg.workflowmgmt.workflow.*;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,14 @@ public class OrderService {
     @Autowired
     private JobService jobService;
 
+    @Autowired
+    private ArchivedAuditRepository archivedAuditRepository;
 
+    @Autowired
+    private ArchivedOrderRepository archivedOrderRepository;
+
+    @Autowired
+    private AuditRepository auditRepository;
 
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
@@ -85,9 +93,57 @@ public class OrderService {
         order.setCurrentState(nextState);
         order.setCurrentUser(null);
 
-        return orderRepository.save(order);
-    }
+        if (nextState.equals(order.getOrderType().getEndState())) {
+            archiveOrderAndAudits(order);
+            return order;
+        }else {
+            return orderRepository.save(order);
+        }
 
+    }
+    @Transactional
+    private void archiveOrderAndAudits(Order order) {
+        try {
+            // Archive order
+            ArchivedOrder archivedOrder = new ArchivedOrder();
+            archivedOrder.setId(order.getId());
+            archivedOrder.setOrderType(order.getOrderType().getName());
+            archivedOrder.setCurrentState(order.getCurrentState().getName());
+            archivedOrder.setNote(order.getNote());
+            if(null != order.getOwnerDetails() ){
+                OwnerDetails ownerDetails = new OwnerDetails();
+                ownerDetails.setOwnerName(order.getOwnerDetails().getOwnerName());
+                ownerDetails.setOwnerAddress(order.getOwnerDetails().getOwnerAddress());
+                ownerDetails.setOwnerEmail(order.getOwnerDetails().getOwnerEmail());
+                ownerDetails.setOwnerMobile(order.getOwnerDetails().getOwnerMobile());
+                archivedOrder.setOwnerDetails(ownerDetails);
+            }
+
+            // Archive related audits
+            List<Audit> audits = order.getAuditItems();
+            List<ArchivedAudit> archivedAudits = new ArrayList<>();
+            for (Audit audit : audits) {
+                ArchivedAudit archivedAudit = new ArchivedAudit();
+                archivedAudit.setId(audit.getId());
+                archivedAudit.setCreatedAt(audit.getTimestamp());
+                archivedAuditRepository.save(archivedAudit);
+                archivedAudits.add(archivedAudit);
+            }
+            archivedOrder.setAuditItems(archivedAudits);
+
+            // Save the archived order
+            archivedOrderRepository.save(archivedOrder);
+
+            // Delete order and related audits
+            auditRepository.deleteAll(audits);
+            orderRepository.delete(order);
+            System.out.println("order deleted" + order.getId());
+        } catch (Exception e) {
+            // Handle exception
+            e.printStackTrace();
+            throw new RuntimeException("Failed to archive order and audits: " + e.getMessage());
+        }
+    }
     public Order setNote(Long orderId, String note) {
         Order order = getOrderById(orderId);
         order.setNote(note);

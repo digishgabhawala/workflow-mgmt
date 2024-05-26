@@ -86,4 +86,10 @@ public class Audit {
     public void setNote(String note) {
         this.note = note;
     }
+
+
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
 }

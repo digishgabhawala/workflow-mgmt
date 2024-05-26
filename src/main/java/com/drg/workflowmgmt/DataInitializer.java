@@ -57,18 +57,18 @@ public class DataInitializer {
 
         JobState endState = new JobState();
         endState.setName("End");
-        endState.setRoles(Arrays.asList("ROLE_USER"));
+        endState.setRoles(Arrays.asList("ROLE_ADMIN"));
         endState.setEstimate(LocalTime.of(1, 30)); // 1 hour 30 minutes
 
         // Create additional JobStates
         JobState jobState1 = new JobState();
         jobState1.setName("Pending");
-        jobState1.setRoles(Arrays.asList("ROLE_ADMIN", "ROLE_USER"));
+        jobState1.setRoles(Arrays.asList("ROLE_ADMIN"));
         jobState1.setEstimate(LocalTime.of(2, 30)); // 2 hours 30 minutes
 
         JobState jobState2 = new JobState();
         jobState2.setName("Completed");
-        jobState2.setRoles(Arrays.asList("ROLE_USER", "ROLE_drg"));
+        jobState2.setRoles(Arrays.asList("ROLE_ADMIN", "ROLE_ADMIN"));
         jobState2.setEstimate(LocalTime.of(1, 0)); // 1 hour
 
         // Save JobStates

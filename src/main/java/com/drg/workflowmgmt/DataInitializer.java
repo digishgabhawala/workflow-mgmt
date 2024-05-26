@@ -19,7 +19,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalTime;
 import java.util.*;
 
 @Configuration
@@ -43,8 +42,9 @@ public class DataInitializer {
     public ApplicationRunner initializer(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         return args -> {
             initializeData(userRepository, roleRepository, passwordEncoder);
-            JobsInitializer.initJobs(jobService,userService);
+            JobsInitializer.initJobs(jobService, userService);
             initOrders();
+            initTestOrders();
         };
     }
 
@@ -78,13 +78,15 @@ public class DataInitializer {
         createUser(userRepository, passwordEncoder, "cook", cookRoleFromDb);
         createUser(userRepository, passwordEncoder, "biller", billerRoleFromDb);
     }
+
     private void createUser(UserRepository userRepository, PasswordEncoder passwordEncoder, String username, Role role) {
         User user = new User();
         user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(username+"_"+"drg"));
+        user.setPassword(passwordEncoder.encode(username + "_" + "drg"));
         user.setRoles(Set.of(role));
         userRepository.save(user);
     }
+
     private void setSecurityContext(User user) {
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -115,6 +117,7 @@ public class DataInitializer {
             order.setOwnerDetails(ownerDetails);
 
             order.setPriority(1); // Higher number means more priority
+            order.setAmount(10.0);
             order.setNote("This is a sample order");
 
             // Create and add audit items
@@ -139,6 +142,60 @@ public class DataInitializer {
             SecurityContextHolder.clearContext();
         }
     }
+    private void initTestOrders() {
+        List<Job> jobs = jobService.getAllJobs();
+        List<JobState> jobStates = jobService.getAllJobStates();
+        List<User> users = userService.getAllUsers();
+        List<Role> roles = userService.getAllRoles();
+
+        Job orderType = jobs.get(1);
+
+        if (!jobs.isEmpty() && !jobStates.isEmpty() && !users.isEmpty()) {
+            // Simulate a logged-in user
+            User loggedInUser = userService.findByUsername("admin").get();
+//            User loggedInUser = users.get(0); // Use the first user for initialization
+            setSecurityContext(loggedInUser);
+            // Create sample Order
+            for(int i = 0; i< 10;i++){
+                Order order = initTestOrder(orderType);
+                orderService.moveToState(order.getId(),orderType.getEndState().getId());
+            }
+            // Clear the security context after initialization
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    private Order initTestOrder(Job orderType) {
+
+        // Simulate a logged-in user
+
+        // Create sample Order
+        Order order = new Order();
+        order.setOrderType(orderType); // Assuming the first job is the type
+
+        // Owner details
+        OwnerDetails ownerDetails = new OwnerDetails();
+        ownerDetails.setOwnerName("John Doe");
+        ownerDetails.setOwnerAddress("123 Main St");
+        ownerDetails.setOwnerEmail("john.doe@example.com");
+        ownerDetails.setOwnerMobile("1234567890");
+        order.setOwnerDetails(ownerDetails);
+
+        order.setPriority(1); // Higher number means more priority
+        order.setAmount(10.0);
+        order.setNote("This is a sample order");
+
+        // Save Order
+        try {
+            return orderService.createOrder(order);
+        } catch (IllegalArgumentException e) {
+            // Handle validation error
+            e.printStackTrace();
+        }
+
+        return order;
+    }
+
 
 
 

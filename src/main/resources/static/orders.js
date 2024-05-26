@@ -226,7 +226,6 @@ function createArchiveOrderRow(archivedOrder) {
         <td>${archivedOrder.ownerDetails ? archivedOrder.ownerDetails.ownerMobile : 'N/A'}</td>
         <td>${archivedOrder.priority}</td>
         <td>${archivedOrder.amount}</td>
-        <td>${order.amount ? order.amount : 'N/A'}</td>
         <td>${archivedOrder.note ? archivedOrder.note : 'N/A'}</td>
     `;
     return row;

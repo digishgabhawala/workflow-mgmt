@@ -19,7 +19,7 @@ public class Order {
     @JoinColumn(name = "job_id", nullable = false)
     private Job orderType;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "order_id")
     private List<Audit> auditItems;
 

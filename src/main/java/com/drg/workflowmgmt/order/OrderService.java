@@ -93,7 +93,7 @@ public class OrderService {
         order.setCurrentState(nextState);
         order.setCurrentUser(null);
 
-        if (nextState.equals(order.getOrderType().getEndState())) {
+        if (nextState.getId().equals(order.getOrderType().getEndState().getId())) {
             archiveOrderAndAudits(order);
             return order;
         }else {

@@ -64,4 +64,13 @@ public class OrderController {
         List<ArchivedOrder> archivedOrders = orderService.getAllArchivedOrders();
         return ResponseEntity.ok(archivedOrders);
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
+        try {
+            orderService.deleteOrder(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

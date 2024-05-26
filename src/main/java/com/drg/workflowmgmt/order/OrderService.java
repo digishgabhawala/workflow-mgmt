@@ -190,4 +190,14 @@ public class OrderService {
     public List<ArchivedOrder> getAllArchivedOrders() {
         return archivedOrderRepository.findAll();
     }
+
+    @Transactional
+    public void deleteOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+
+        List<Audit> audits = order.getAuditItems();
+        auditRepository.deleteAll(audits);
+        orderRepository.delete(order);
+    }
 }

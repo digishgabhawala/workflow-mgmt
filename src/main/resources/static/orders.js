@@ -222,7 +222,6 @@ function createArchiveOrderRow(archivedOrder) {
         <td>${archivedOrder.ownerDetails ? archivedOrder.ownerDetails.ownerMobile : 'N/A'}</td>
         <td>N/A</td>
         <td>${archivedOrder.note ? archivedOrder.note : 'N/A'}</td>
-        <td>Read Only</td>
     `;
     return row;
 }

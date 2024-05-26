@@ -7,61 +7,67 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
+
 <div class="container">
-    <h1 class="mt-5">User Management System</h1>
+    <div id="usersContent">
+        <!-- Existing content of users.html -->
+        <header class="bg-primary text-white text-center py-3">
+            <h1>User Management</h1>
+        </header>
 
-    <!-- Users Section -->
-    <div class="d-flex justify-content-between align-items-center">
-        <h2>All Users</h2>
-        <button class="btn btn-primary my-3" onclick="document.getElementById('userForm').classList.toggle('d-none')">Create User</button>
-    </div>
-    <form id="userForm" class="d-none" onsubmit="handleSubmitUser(event)">
-        <h2>Create User</h2>
-        <div class="form-group">
-            <label for="userName">Username:</label>
-            <input type="text" id="userName" class="form-control" required>
+        <!-- Users Section -->
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>All Users</h2>
+            <button class="btn btn-primary my-3" onclick="document.getElementById('userForm').classList.toggle('d-none')">Create User</button>
         </div>
-        <button id="showUserFormButton" type="submit" class="btn btn-primary">Create User</button>
-        <button type="button" class="btn btn-secondary" onclick="hideUserForm()">Cancel</button>
-    </form>
-    <table class="table table-bordered">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Roles</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody id="userTableBody"></tbody>
-    </table>
+        <form id="userForm" class="d-none" onsubmit="handleSubmitUser(event)">
+            <h2>Create User</h2>
+            <div class="form-group">
+                <label for="userName">Username:</label>
+                <input type="text" id="userName" class="form-control" required>
+            </div>
+            <button id="showUserFormButton" type="submit" class="btn btn-primary">Create User</button>
+            <button type="button" class="btn btn-secondary" onclick="hideUserForm()">Cancel</button>
+        </form>
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Roles</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="userTableBody"></tbody>
+        </table>
 
-    <!-- Roles Section -->
-    <div class="d-flex justify-content-between align-items-center">
-        <h2>All Roles</h2>
-        <button id="showRoleFormButton" class="btn btn-primary my-3" onclick="document.getElementById('roleForm').classList.toggle('d-none')">Create Role</button>
-    </div>
-    <form id="roleForm" class="d-none" onsubmit="handleSubmitRole(event)">
-        <h2>Create Role</h2>
-        <div class="form-group">
-            <label for="roleName">Role Name:</label>
-            <input type="text" id="roleName" class="form-control" required>
+        <!-- Roles Section -->
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>All Roles</h2>
+            <button id="showRoleFormButton" class="btn btn-primary my-3" onclick="document.getElementById('roleForm').classList.toggle('d-none')">Create Role</button>
         </div>
-        <button type="submit" class="btn btn-primary">Create Role</button>
-        <button type="button" class="btn btn-secondary" onclick="hideRoleForm()">Cancel</button>
-    </form>
-    <table class="table table-bordered">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-        </tr>
-        </thead>
-        <tbody id="roleTableBody"></tbody>
-    </table>
+        <form id="roleForm" class="d-none" onsubmit="handleSubmitRole(event)">
+            <h2>Create Role</h2>
+            <div class="form-group">
+                <label for="roleName">Role Name:</label>
+                <input type="text" id="roleName" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Role</button>
+            <button type="button" class="btn btn-secondary" onclick="hideRoleForm()">Cancel</button>
+        </form>
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+            </tr>
+            </thead>
+            <tbody id="roleTableBody"></tbody>
+        </table>
+    </div>
 </div>
 
 <script src="users.js"></script>
-<script src="common.js"></script> <!-- Add this line -->
+<script src="common.js"></script>
 </body>
 </html>

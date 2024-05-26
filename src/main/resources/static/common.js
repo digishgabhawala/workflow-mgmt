@@ -3,10 +3,24 @@
 // Function to create the header
 function createHeader(username) {
     const headerHTML = `
-        <div class="d-flex justify-content-between align-items-center mt-3 mb-4">
-            <h1 id="userName">Hello: Username</h1>
-            <button id="logoutButton" class="btn btn-danger" onclick="handleLogout()">Logout</button>
-        </div>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="#">Workflow Management System</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Hello, ${username}</a>
+                        </li>
+                        <li class="nav-item">
+                            <button id="logoutButton" class="btn btn-danger nav-link" onclick="handleLogout()">Logout</button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
     `;
     return headerHTML;
 }
@@ -14,8 +28,10 @@ function createHeader(username) {
 // Function to create the footer
 function createFooter() {
     const footerHTML = `
-        <footer class="bg-light text-center py-3">
-            <p>&copy; 2024 Management System</p>
+        <footer class="bg-dark text-white text-center py-3">
+            <div class="container">
+                <p>&copy; 2024 Workflow Management System | All Rights Reserved</p>
+            </div>
         </footer>
     `;
     return footerHTML;
@@ -25,18 +41,22 @@ function createFooter() {
 function insertHeaderAndFooter(username) {
     const container = document.querySelector('.container');
     if (container) {
-        container.insertAdjacentHTML('afterbegin', createHeader());
+        container.insertAdjacentHTML('afterbegin', createHeader(username));
     }
     document.body.insertAdjacentHTML('beforeend', createFooter());
 }
 
 // Fetch the username and insert the header and footer
 document.addEventListener('DOMContentLoaded', () => {
-    // Replace with the actual method of fetching the username
-    loadUserName()
-    insertHeaderAndFooter();
+    loadUserName().then(username => {
+        insertHeaderAndFooter(username);
+    }).catch(error => {
+        console.error('Error loading user details:', error);
+        insertHeaderAndFooter('User');
+    });
 });
 
+// Function to load the username from the server
 async function loadUserName() {
     try {
         const response = await fetch('/users/details', {
@@ -51,16 +71,15 @@ async function loadUserName() {
         }
 
         const user = await response.json();
-        document.getElementById('userName').textContent = `Hello: ${user.username}`;
+        return user.username;
     } catch (error) {
         console.error('Error loading user details:', error);
+        throw error;
     }
 }
 
-
 // Logout function
 async function handleLogout() {
-
     try {
         const csrfToken = await fetchCsrfToken();
         const response = await fetch('/logout', {
@@ -79,10 +98,9 @@ async function handleLogout() {
     } catch (error) {
         console.error('Error logging out:', error);
     }
-
 }
 
-
+// Function to fetch CSRF token
 async function fetchCsrfToken() {
     try {
         const response = await fetch('/csrf-token');
@@ -96,5 +114,3 @@ async function fetchCsrfToken() {
         throw new Error('Failed to fetch CSRF token');
     }
 }
-
-

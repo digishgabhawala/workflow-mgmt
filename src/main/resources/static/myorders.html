@@ -5,45 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Orders</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
 </head>
 <body>
-<div class="container">
-    <h1 class="mt-5">My Current Orders</h1>
-    <table id="myOrdersTable" class="table table-bordered">
-        <thead>
-        <tr>
-            <th>Order ID</th>
-            <th>Order Type</th>
-            <th>Current State</th>
-            <th>Note</th>
-            <th>Owner Details</th>
-            <th>Action</th>
-        </tr>
-        </thead>
-        <tbody>
-        <!-- My Orders will be populated here -->
-        </tbody>
-    </table>
+<div class="container mt-5">
+    <header class="bg-primary text-white text-center py-3">
+        <h1>My Orders</h1>
+    </header>
 
-    <h1 class="mt-5">Available Orders For Me</h1>
-    <table id="availableOrdersTable" class="table table-bordered">
-        <thead>
-        <tr>
-            <th>Order ID</th>
-            <th>Order Type</th>
-            <th>Current State</th>
-            <th>Note</th>
-            <th>Owner Details</th>
-            <th>Action</th>
-        </tr>
-        </thead>
-        <tbody>
-        <!-- Available Orders will be populated here -->
-        </tbody>
-    </table>
+    <div id="myOrdersContent">
+        <!-- Existing content of myorders.html -->
+        <h1 class="mt-5">My Current Orders</h1>
+        <table id="myOrdersTable" class="table table-bordered">
+            <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Order Type</th>
+                <th>Current State</th>
+                <th>Note</th>
+                <th>Owner Details</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- My Orders will be populated here -->
+            </tbody>
+        </table>
+        <h1 class="mt-5">Available Orders For Me</h1>
+        <table id="availableOrdersTable" class="table table-bordered">
+            <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Order Type</th>
+                <th>Current State</th>
+                <th>Note</th>
+                <th>Owner Details</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Available Orders will be populated here -->
+            </tbody>
+        </table>
+    </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="myorders.js"></script>
-<script src="common.js"></script> <!-- Add this line -->
+<script src="common.js"></script>
 </body>
 </html>

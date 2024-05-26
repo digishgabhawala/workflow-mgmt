@@ -209,6 +209,24 @@ function toggleOrderForm() {
     orderForm.classList.toggle('d-none');
 }
 
+// Function to create a row for archived orders
+function createArchiveOrderRow(archivedOrder) {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${archivedOrder.id}</td>
+        <td>${archivedOrder.orderType}</td>
+        <td>${archivedOrder.currentState}</td>
+        <td>${archivedOrder.ownerDetails ? archivedOrder.ownerDetails.ownerName : 'N/A'}</td>
+        <td>${archivedOrder.ownerDetails ? archivedOrder.ownerDetails.ownerAddress : 'N/A'}</td>
+        <td>${archivedOrder.ownerDetails ? archivedOrder.ownerDetails.ownerEmail : 'N/A'}</td>
+        <td>${archivedOrder.ownerDetails ? archivedOrder.ownerDetails.ownerMobile : 'N/A'}</td>
+        <td>N/A</td>
+        <td>${archivedOrder.note ? archivedOrder.note : 'N/A'}</td>
+        <td>Read Only</td>
+    `;
+    return row;
+}
+
 // Function to load archived orders
 async function loadArchivedOrders() {
     try {
@@ -217,7 +235,7 @@ async function loadArchivedOrders() {
         archivedOrderTableBody.innerHTML = '';
 
         archivedOrders.forEach(order => {
-            const orderRow = createOrderRow(order);
+            const orderRow = createArchiveOrderRow(order);
             archivedOrderTableBody.appendChild(orderRow);
         });
 

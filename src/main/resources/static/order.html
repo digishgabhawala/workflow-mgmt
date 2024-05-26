@@ -71,6 +71,29 @@
         <!-- Orders will be dynamically loaded here -->
         </tbody>
     </table>
+
+    <!-- Button to load archived orders -->
+    <button id="loadArchivedOrdersButton" class="btn btn-secondary mb-4" onclick="loadArchivedOrders()">Load Archived Orders</button>
+
+    <!-- Table for displaying archived orders -->
+    <table id="archivedOrderTable" class="table table-striped d-none">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Order Type</th>
+            <th>Current State</th>
+            <th>Owner Name</th>
+            <th>Owner Address</th>
+            <th>Owner Email</th>
+            <th>Owner Mobile</th>
+            <th>Priority</th>
+            <th>Note</th>
+        </tr>
+        </thead>
+        <tbody id="archivedOrderTableBody">
+        <!-- Archived orders will be dynamically loaded here -->
+        </tbody>
+    </table>
 </main>
 
 <footer class="bg-light text-center py-3">

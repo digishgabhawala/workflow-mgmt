@@ -208,3 +208,40 @@ function toggleOrderForm() {
     const orderForm = document.getElementById('orderForm');
     orderForm.classList.toggle('d-none');
 }
+
+// Function to load archived orders
+async function loadArchivedOrders() {
+    try {
+        const archivedOrders = await fetchArchivedOrders();
+        const archivedOrderTableBody = document.getElementById('archivedOrderTableBody');
+        archivedOrderTableBody.innerHTML = '';
+
+        archivedOrders.forEach(order => {
+            const orderRow = createOrderRow(order);
+            archivedOrderTableBody.appendChild(orderRow);
+        });
+
+        // Show the archived order table and hide the main order table
+//        document.getElementById('orderTableBody').parentNode.parentNode.classList.add('d-none');
+        document.getElementById('archivedOrderTable').classList.remove('d-none');
+    } catch (error) {
+        console.error('Error loading archived orders:', error);
+        alert('Failed to load archived orders. Please try again.');
+    }
+}
+
+// Function to fetch archived orders from the backend
+async function fetchArchivedOrders() {
+    try {
+        const response = await fetch('/orders/archived');
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching archived orders:', error);
+        throw new Error('Failed to fetch archived orders');
+    }
+}
+

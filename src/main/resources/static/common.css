@@ -18,3 +18,10 @@ body {
     display: block;
     margin: 10px 0;
 }
+
+.btn-block {
+    width: 100%;
+}
+.hidden {
+    display: none;
+}

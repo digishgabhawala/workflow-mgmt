@@ -1,34 +1,31 @@
 // common.js
 
-// Function to create the header
+
+// Function to create the header with offcanvas button
 function createHeader(username) {
     const headerHTML = `
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-            <div class="container">
-                <a class="navbar-brand" href="#">Workflow Management System</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+        <header class="bg-primary text-white text-center py-3">
+            <div class="container d-flex justify-content-between align-items-center">
+                <h1 class="m-0">Workflow Management System</h1>
+                <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar">
+                    <i class="bi bi-list"></i>
                 </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">Hello, ${username}</a>
-                        </li>
-                        <li class="nav-item">
-                            <button class="btn btn-primary nav-link" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar">
-                                <i class="bi bi-gear"></i> Settings
-                            </button>
-                        </li>
-                    </ul>
-                </div>
             </div>
-        </nav>
+        </header>
     `;
     return headerHTML;
 }
 
 // Function to create the off-canvas sidebar
-function createOffcanvasSidebar() {
+function createOffcanvasSidebar(user) {
+    let usersLink = '';
+    let ordersLink = '';
+    if (user.roles.includes('ROLE_ADMIN')) {
+        usersLink = '<a href="users.html">Users</a>';
+        ordersLink = '<a href="order.html">Orders Dashboard</a>';
+        jobsLink = '<a href="jobs.html">Jobs Dashboard</a>';
+    }
+
     const sidebarHTML = `
         <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasSidebar" aria-labelledby="offcanvasSidebarLabel">
             <div class="offcanvas-header">
@@ -36,10 +33,11 @@ function createOffcanvasSidebar() {
                 <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body">
-                <h3>Menu</h3>
-                <a href="#">Dashboard</a>
-                <a href="#">Users</a>
-                <a href="#">Roles</a>
+                <h3>Hello, ${user.username} </h3>
+                <a href="myorders.html">My Orders</a>
+                ${ordersLink}
+                ${jobsLink}
+                ${usersLink}
                 <button id="logoutButton" class="btn btn-danger mt-3" onclick="handleLogout()">Logout</button>
             </div>
         </div>
@@ -60,27 +58,27 @@ function createFooter() {
 }
 
 // Function to insert the header, sidebar, and footer into the page
-function insertHeaderSidebarAndFooter(username) {
+function insertHeaderSidebarAndFooter(user) {
     const container = document.querySelector('.container');
     if (container) {
-        container.insertAdjacentHTML('afterbegin', createHeader(username));
-        container.insertAdjacentHTML('beforeend', createOffcanvasSidebar());
+        container.insertAdjacentHTML('afterbegin', createHeader());
+        container.insertAdjacentHTML('beforeend', createOffcanvasSidebar(user));
     }
     document.body.insertAdjacentHTML('beforeend', createFooter());
 }
 
 // Fetch the username and insert the header, sidebar, and footer
 document.addEventListener('DOMContentLoaded', () => {
-    loadUserName().then(username => {
-        insertHeaderSidebarAndFooter(username);
+    loadUser().then(user => {
+        insertHeaderSidebarAndFooter(user);
     }).catch(error => {
         console.error('Error loading user details:', error);
         insertHeaderSidebarAndFooter('User');
     });
 });
 
-// Function to load the username from the server
-async function loadUserName() {
+// Function to load the user from the server
+async function loadUser() {
     try {
         const response = await fetch('/users/details', {
             method: 'GET',
@@ -94,7 +92,7 @@ async function loadUserName() {
         }
 
         const user = await response.json();
-        return user.username;
+        return user;
     } catch (error) {
         console.error('Error loading user details:', error);
         throw error;

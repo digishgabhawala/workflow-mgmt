@@ -159,6 +159,7 @@ public class DataInitializer {
             // Create sample Order
             for(int i = 0; i< 10;i++){
                 Order order = initTestOrder(orderType);
+                orderService.moveToState(order.getId(), orderType.getToJobStateIds().get(0));
                 orderService.moveToState(order.getId(),orderType.getEndState().getId());
             }
             // Clear the security context after initialization

@@ -1,5 +1,5 @@
 // Function to create the header with offcanvas button
-function createHeader(username) {
+function createHeader() {
     const headerHTML = `
         <header class="bg-primary text-white text-center py-3">
             <div class="container d-flex justify-content-between align-items-center">
@@ -17,10 +17,19 @@ function createHeader(username) {
 function createOffcanvasSidebar(user) {
     let usersLink = '';
     let ordersLink = '';
+    let adminActions = '';
 
     if (user.roles.includes('ROLE_ADMIN')) {
         usersLink = '<a href="users.html">Users</a>';
         ordersLink = '<a href="order.html">Orders Dashboard</a>';
+        adminActions = `
+            <button id="exportButton" class="btn btn-secondary mt-3" onclick="handleExport()">Export Database</button>
+            <button id="importButton" class="btn btn-secondary mt-3" onclick="showImportForm()">Import Database</button>
+            <form id="importForm" class="mt-3" style="display: none;" onsubmit="handleImport(event)">
+                <input type="file" id="importFile" required>
+                <button type="submit" class="btn btn-primary mt-2">Import</button>
+            </form>
+        `;
     }
 
     const sidebarHTML = `
@@ -34,6 +43,7 @@ function createOffcanvasSidebar(user) {
                 <a href="myorders.html">My Orders</a>
                 ${ordersLink}
                 ${usersLink}
+                ${adminActions}
                 <button id="changePasswordButton" class="btn btn-secondary mt-3" onclick="showChangePasswordModal()">Change Password</button>
                 <button id="logoutButton" class="btn btn-danger mt-3" onclick="handleLogout()">Logout</button>
             </div>
@@ -140,6 +150,69 @@ async function handleChangePassword(event) {
     } catch (error) {
         console.error('Error changing password:', error);
         alert('An error occurred while changing password.');
+    }
+}
+
+// Function to handle export
+async function handleExport() {
+    try {
+        const response = await fetch('/db/export', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'database_dump.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        } else {
+            alert('Failed to export database.');
+        }
+    } catch (error) {
+        console.error('Error exporting database:', error);
+        alert('An error occurred while exporting the database.');
+    }
+}
+
+// Function to show the import form
+function showImportForm() {
+    document.getElementById('importForm').style.display = 'block';
+}
+
+// Function to handle import
+async function handleImport(event) {
+    event.preventDefault();
+
+    const fileInput = document.getElementById('importFile');
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const csrfToken = await fetchCsrfToken();
+        const response = await fetch('/db/import', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: formData
+        });
+
+        if (response.ok) {
+            alert('Database imported successfully.');
+        } else {
+            alert('Failed to import database.');
+        }
+    } catch (error) {
+        console.error('Error importing database:', error);
+        alert('An error occurred while importing the database.');
     }
 }
 

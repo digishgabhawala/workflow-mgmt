@@ -128,7 +128,7 @@ public class OrderService {
                 ArchivedAudit archivedAudit = new ArchivedAudit();
                 archivedAudit.setId(audit.getId());
                 archivedAudit.setCreatedAt(audit.getTimestamp());
-                archivedAuditRepository.save(archivedAudit);
+//                archivedAuditRepository.save(archivedAudit);
                 archivedAudits.add(archivedAudit);
             }
             archivedOrder.setAuditItems(archivedAudits);

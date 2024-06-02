@@ -34,6 +34,7 @@ public class JobsInitializer {
         JobState eatingState = createJobState("Eating", Arrays.asList("ROLE_CUSTOMER"), LocalTime.of(1, 0));
         JobState billingState = createJobState("Billing", Arrays.asList("ROLE_BILLER"), LocalTime.of(0, 15));
         JobState endState = createJobState("End", Arrays.asList("ROLE_BILLER","ROLE_ADMIN"), LocalTime.of(0, 30));
+        JobState dummy = createJobState("Dummy", Arrays.asList("ROLE_ADMIN"), LocalTime.of(0, 30));
 
         // Save JobStates
         startState = jobService.createJobState(startState);
@@ -44,6 +45,7 @@ public class JobsInitializer {
         eatingState = jobService.createJobState(eatingState);
         billingState = jobService.createJobState(billingState);
         endState = jobService.createJobState(endState);
+        dummy = jobService.createJobState(dummy);
 
         // Create sample Job
         Job job = new Job();
@@ -71,7 +73,9 @@ public class JobsInitializer {
             addTransition(jobService, createdJob, eatingState, billingState);
             addTransition(jobService, createdJob, billingState, endState);
         }
-        addTransition(jobService,createdTestJob,startState,endState);
+        jobService.addJobStateToJob(createdTestJob.getId(),dummy);
+        addTransition(jobService,createdTestJob,startState,dummy);
+        addTransition(jobService,createdTestJob,dummy,endState);
     }
 
     private static JobState createJobState(String name, List<String> roles, LocalTime estimate) {

@@ -68,9 +68,22 @@ async function handleSubmitUser(event) {
     event.preventDefault();
     const userName = document.getElementById('userName').value;
     const password = document.getElementById('password').value;
+    const rolesSelect = document.getElementById('roles');
+    const selectedRoles = Array.from(rolesSelect.selectedOptions).map(option => option.value);
+
+    if (selectedRoles.length === 0) {
+        alert('Please select at least one role');
+        return;
+    }
+
     const csrfToken = await fetchCsrfToken();
     const createdUser = await createUser(userName, password, csrfToken);
+
     if (createdUser.id) {
+        for (const roleId of selectedRoles) {
+            await addRoleToUser(createdUser.id, roleId, csrfToken);
+        }
+
         loadUsers();
         document.getElementById('userForm').reset();
         document.getElementById('userForm').classList.add('d-none');
@@ -118,20 +131,36 @@ async function handleRemoveRole(userId, roleId) {
 function showUserForm() {
     document.getElementById('userForm').classList.remove('d-none');
     document.getElementById('showUserFormButton').style.display = 'none';
+    loadRolesDropdown();
 }
+
 function hideUserForm() {
     document.getElementById('userForm').classList.add('d-none');
     document.getElementById('userForm').reset();
     document.getElementById('showUserFormButton').style.display = 'inline-block';
 }
+
 function showRoleForm() {
     document.getElementById('roleForm').classList.remove('d-none');
     document.getElementById('showRoleFormButton').style.display = 'none';
 }
+
 function hideRoleForm() {
     document.getElementById('roleForm').classList.add('d-none');
     document.getElementById('roleForm').reset();
     document.getElementById('showRoleFormButton').style.display = 'inline-block';
+}
+
+async function loadRolesDropdown() {
+    const roles = await fetchRoles();
+    const rolesSelect = document.getElementById('roles');
+    rolesSelect.innerHTML = '';
+    roles.forEach(role => {
+        const option = document.createElement('option');
+        option.value = role.id;
+        option.textContent = role.name;
+        rolesSelect.appendChild(option);
+    });
 }
 
 async function loadUsers() {
@@ -144,11 +173,11 @@ async function loadUsers() {
         row.innerHTML = `
             <td>${user.id}</td>
             <td>${user.username}</td>
-            <td>${getUserRoles(user, roles)}</td>
+            <td><ul class="list-group">${getUserRoles(user, roles)}</ul></td>
             <td>
                 <button class="btn btn-sm btn-success" onclick="document.getElementById('addRoleForm-${user.id}').classList.toggle('d-none')">+ Add Role</button>
                 <form id="addRoleForm-${user.id}" class="form-inline mt-2 d-none" onsubmit="handleAddRole(event, ${user.id})">
-                    <select id="roleSelect-${user.id}" class="form-control mr-2">${getRoleOptions(roles,user.roles)}</select>
+                    <select id="roleSelect-${user.id}" class="form-control mr-2">${getRoleOptions(roles, user.roles)}</select>
                     <button type="submit" class="btn btn-primary btn-sm">Add</button>
                 </form>
                 <button class="btn btn-sm btn-danger" onclick="handleDeleteUser(${user.id})">Delete</button>
@@ -226,4 +255,5 @@ async function handleDeleteUser(userId) {
 window.onload = async function() {
     loadUsers();
     loadRoles();
+    loadRolesDropdown();
 };

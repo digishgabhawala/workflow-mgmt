@@ -6,16 +6,18 @@ function createHeader(username) {
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
                 <a class="navbar-brand" href="#">Workflow Management System</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ml-auto">
+                    <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
                             <a class="nav-link" href="#">Hello, ${username}</a>
                         </li>
                         <li class="nav-item">
-                            <button id="logoutButton" class="btn btn-danger nav-link" onclick="handleLogout()">Logout</button>
+                            <button class="btn btn-primary nav-link" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar">
+                                <i class="bi bi-gear"></i> Settings
+                            </button>
                         </li>
                     </ul>
                 </div>
@@ -23,6 +25,26 @@ function createHeader(username) {
         </nav>
     `;
     return headerHTML;
+}
+
+// Function to create the off-canvas sidebar
+function createOffcanvasSidebar() {
+    const sidebarHTML = `
+        <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasSidebar" aria-labelledby="offcanvasSidebarLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="offcanvasSidebarLabel">Settings</h5>
+                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+                <h3>Menu</h3>
+                <a href="#">Dashboard</a>
+                <a href="#">Users</a>
+                <a href="#">Roles</a>
+                <button id="logoutButton" class="btn btn-danger mt-3" onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+    `;
+    return sidebarHTML;
 }
 
 // Function to create the footer
@@ -37,22 +59,23 @@ function createFooter() {
     return footerHTML;
 }
 
-// Function to insert the header and footer into the page
-function insertHeaderAndFooter(username) {
+// Function to insert the header, sidebar, and footer into the page
+function insertHeaderSidebarAndFooter(username) {
     const container = document.querySelector('.container');
     if (container) {
         container.insertAdjacentHTML('afterbegin', createHeader(username));
+        container.insertAdjacentHTML('beforeend', createOffcanvasSidebar());
     }
     document.body.insertAdjacentHTML('beforeend', createFooter());
 }
 
-// Fetch the username and insert the header and footer
+// Fetch the username and insert the header, sidebar, and footer
 document.addEventListener('DOMContentLoaded', () => {
     loadUserName().then(username => {
-        insertHeaderAndFooter(username);
+        insertHeaderSidebarAndFooter(username);
     }).catch(error => {
         console.error('Error loading user details:', error);
-        insertHeaderAndFooter('User');
+        insertHeaderSidebarAndFooter('User');
     });
 });
 

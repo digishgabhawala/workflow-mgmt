@@ -10,7 +10,6 @@
 
 <div class="container">
     <div id="usersContent">
-        <!-- Existing content of users.html -->
         <header class="bg-primary text-white text-center py-3">
             <h1>User Management</h1>
         </header>
@@ -25,6 +24,10 @@
             <div class="form-group">
                 <label for="userName">Username:</label>
                 <input type="text" id="userName" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" class="form-control" required>
             </div>
             <button id="showUserFormButton" type="submit" class="btn btn-primary">Create User</button>
             <button type="button" class="btn btn-secondary" onclick="hideUserForm()">Cancel</button>

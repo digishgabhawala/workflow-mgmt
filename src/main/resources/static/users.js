@@ -16,14 +16,14 @@ async function fetchRoles() {
     return data;
 }
 
-async function createUser(userName, csrfToken) {
+async function createUser(userName, password, csrfToken) {
     const response = await fetch('/users', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': csrfToken
         },
-        body: JSON.stringify({ username: userName })
+        body: JSON.stringify({ username: userName, password: password })
     });
     return response.json();
 }
@@ -67,8 +67,9 @@ async function removeRoleFromUser(userId, roleId, csrfToken) {
 async function handleSubmitUser(event) {
     event.preventDefault();
     const userName = document.getElementById('userName').value;
+    const password = document.getElementById('password').value;
     const csrfToken = await fetchCsrfToken();
-    const createdUser = await createUser(userName, csrfToken);
+    const createdUser = await createUser(userName, password, csrfToken);
     if (createdUser.id) {
         loadUsers();
         document.getElementById('userForm').reset();
@@ -152,7 +153,6 @@ async function loadUsers() {
                 </form>
                 <button class="btn btn-sm btn-danger" onclick="handleDeleteUser(${user.id})">Delete</button>
             </td>
-
         `;
         tableBody.appendChild(row);
     });
@@ -177,19 +177,17 @@ function getUserRoles(user, roles) {
     }
 
     return userRoles.map(role => `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    ${role.name}
-                    <button class="btn btn-sm btn-danger ml-2" onclick="handleRemoveRole(${user.id}, ${role.id})">Remove</button>
-                </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            ${role.name}
+            <button class="btn btn-sm btn-danger ml-2" onclick="handleRemoveRole(${user.id}, ${role.id})">Remove</button>
+        </li>
     `).join('');
 }
 
-
-function getRoleOptions(allRoles,userRoles) {
+function getRoleOptions(allRoles, userRoles) {
     const userRoleIds = userRoles.map(role => role.id);
     const filteredRoles = allRoles.filter(role => !userRoleIds.includes(role.id));
     return filteredRoles.map(role => `<option value="${role.id}">${role.name}</option>`).join('');
-//    return roles.map(role => `<option value="${role.id}">${role.name}</option>`).join('');
 }
 
 async function loadRoles() {

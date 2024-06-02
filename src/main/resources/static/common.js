@@ -1,6 +1,3 @@
-// common.js
-
-
 // Function to create the header with offcanvas button
 function createHeader(username) {
     const headerHTML = `
@@ -20,10 +17,10 @@ function createHeader(username) {
 function createOffcanvasSidebar(user) {
     let usersLink = '';
     let ordersLink = '';
+
     if (user.roles.includes('ROLE_ADMIN')) {
         usersLink = '<a href="users.html">Users</a>';
         ordersLink = '<a href="order.html">Orders Dashboard</a>';
-        jobsLink = '<a href="jobs.html">Jobs Dashboard</a>';
     }
 
     const sidebarHTML = `
@@ -33,11 +30,11 @@ function createOffcanvasSidebar(user) {
                 <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body">
-                <h3>Hello, ${user.username} </h3>
+                <h3>Hello, ${user.username}</h3>
                 <a href="myorders.html">My Orders</a>
                 ${ordersLink}
-                ${jobsLink}
                 ${usersLink}
+                <button id="changePasswordButton" class="btn btn-secondary mt-3" onclick="showChangePasswordModal()">Change Password</button>
                 <button id="logoutButton" class="btn btn-danger mt-3" onclick="handleLogout()">Logout</button>
             </div>
         </div>
@@ -63,11 +60,90 @@ function insertHeaderSidebarAndFooter(user) {
     if (container) {
         container.insertAdjacentHTML('afterbegin', createHeader());
         container.insertAdjacentHTML('beforeend', createOffcanvasSidebar(user));
+        container.insertAdjacentHTML('beforeend', createChangePasswordModal());
     }
     document.body.insertAdjacentHTML('beforeend', createFooter());
 }
 
-// Fetch the username and insert the header, sidebar, and footer
+// Function to create the change password modal
+function createChangePasswordModal() {
+    const modalHTML = `
+        <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="changePasswordForm" onsubmit="handleChangePassword(event)">
+                            <div class="mb-3">
+                                <label for="oldPassword" class="form-label">Current Password</label>
+                                <input type="password" class="form-control" id="oldPassword" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="newPassword" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirmNewPassword" class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirmNewPassword" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Change Password</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    return modalHTML;
+}
+
+// Function to show the change password modal
+function showChangePasswordModal() {
+    const changePasswordModal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+    changePasswordModal.show();
+}
+
+// Function to handle password change
+async function handleChangePassword(event) {
+    event.preventDefault();
+
+    const oldPassword = document.getElementById('oldPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+    if (newPassword !== confirmNewPassword) {
+        alert('New password and confirm new password do not match.');
+        return;
+    }
+
+    try {
+        const csrfToken = await fetchCsrfToken();
+        const response = await fetch('/users/change-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({ oldPassword, newPassword })
+        });
+
+        if (response.ok) {
+            alert('Password changed successfully.');
+            const changePasswordModal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
+            changePasswordModal.hide();
+        } else {
+            const errorData = await response.json();
+            alert(`Failed to change password: ${errorData.message}`);
+        }
+    } catch (error) {
+        console.error('Error changing password:', error);
+        alert('An error occurred while changing password.');
+    }
+}
+
+// Fetch the user details and insert the header, sidebar, and footer
 document.addEventListener('DOMContentLoaded', () => {
     loadUser().then(user => {
         insertHeaderSidebarAndFooter(user);
@@ -112,7 +188,7 @@ async function handleLogout() {
         });
 
         if (response.ok) {
-            window.location.href = '/login'; // Redirect to login page after logout
+            window.location.href = '/myorders.html'; // Redirect to login page after logout
         } else {
             throw new Error('Failed to logout');
         }

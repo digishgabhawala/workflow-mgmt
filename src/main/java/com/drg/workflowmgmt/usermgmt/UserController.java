@@ -95,5 +95,39 @@ public class UserController {
         }
     }
 
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest changePasswordRequest) {
+        boolean isPasswordChanged = userService.changePassword(
+                changePasswordRequest.getOldPassword(),
+                changePasswordRequest.getNewPassword()
+        );
 
+        if (isPasswordChanged) {
+            return new ResponseEntity<>("Password changed successfully", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("Failed to change password", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    public static class ChangePasswordRequest {
+        private String oldPassword;
+        private String newPassword;
+
+        // Getters and setters
+        public String getOldPassword() {
+            return oldPassword;
+        }
+
+        public void setOldPassword(String oldPassword) {
+            this.oldPassword = oldPassword;
+        }
+
+        public String getNewPassword() {
+            return newPassword;
+        }
+
+        public void setNewPassword(String newPassword) {
+            this.newPassword = newPassword;
+        }
+    }
 }

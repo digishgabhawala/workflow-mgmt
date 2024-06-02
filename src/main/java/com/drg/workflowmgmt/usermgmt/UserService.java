@@ -2,6 +2,7 @@ package com.drg.workflowmgmt.usermgmt;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -17,6 +18,9 @@ public class UserService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -99,6 +103,17 @@ public class UserService {
         return false;
     }
 
+    public boolean changePassword(String oldPassword, String newPassword) {
+        User currentUser = getCurrentUser();
+
+        if (!passwordEncoder.matches(oldPassword, currentUser.getPassword())) {
+            return false; // Old password doesn't match
+        }
+
+        currentUser.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(currentUser);
+        return true;
+    }
 
     public class UserWithRolesDto {
         private Long id;

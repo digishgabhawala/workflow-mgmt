@@ -23,7 +23,7 @@ function createOffcanvasSidebar(user) {
 
     if (user.roles.includes('ROLE_ADMIN')) {
         usersLink = '<button class="btn btn-secondary mt-3" onclick="window.location.href=\'users.html\'">Users</button>';
-        ordersLink = '<button class="btn btn-secondary mt-3" onclick="window.location.href=\'order.html\'">Orders Dashboard</button>';
+        ordersLink = '<button class="btn btn-secondary mt-3" onclick="window.location.href=\'order.html\'">Orders</button>';
         oldOrdersLink = '<button class="btn btn-secondary mt-3" onclick="window.location.href=\'completedOrders.html\'">Old Orders</button>';
         jobsLink = '<button class="btn btn-secondary mt-3" onclick="window.location.href=\'jobs.html\'">Manage Jobs</button>';
         adminActions = `

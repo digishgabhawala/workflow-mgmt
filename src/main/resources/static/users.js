@@ -158,33 +158,40 @@ async function loadRolesDropdown() {
     });
 }
 
+
 async function loadUsers() {
     const users = await fetchUsers();
     const roles = await fetchRoles();
-    const tableBody = document.getElementById('userTableBody');
-    tableBody.innerHTML = '';
+    const userCardsContainer = document.getElementById('userCards');
+    userCardsContainer.innerHTML = '';
     users.forEach(user => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${user.id}</td>
-            <td>${user.username}</td>
-            <td><ul class="list-group">${getUserRoles(user, roles)}</ul></td>
-            <td>
-                <button class="btn btn-sm btn-success" onclick="document.getElementById('addRoleForm-${user.id}').classList.toggle('d-none')">+ Add Role</button>
-                <form id="addRoleForm-${user.id}" class="form-inline mt-2 d-none" onsubmit="handleAddRole(event, ${user.id})">
-                    <select id="roleSelect-${user.id}" class="form-control mr-2">${getRoleOptions(roles, user.roles)}</select>
-                    <button type="submit" class="btn btn-primary btn-sm">Add</button>
-                </form>
-                <button class="btn btn-sm btn-danger" onclick="handleDeleteUser(${user.id})">Delete</button>
-            </td>
+        const card = document.createElement('div');
+        card.classList.add('card', 'mb-3', 'col-md-4', 'col-sm-6');
+
+        const cardBody = document.createElement('div');
+        cardBody.classList.add('card-body');
+
+        cardBody.innerHTML = `
+            <h5 class="card-title">${user.username}</h5>
+            <p class="card-text"><strong>ID:</strong> ${user.id}</p>
+            <p class="card-text"><strong>Roles:</strong></p>
+            <ul class="list-group mb-2">${getUserRoles(user, roles)}</ul>
+            <button class="btn btn-success btn-sm mb-2 w-100" onclick="document.getElementById('addRoleForm-${user.id}').classList.toggle('d-none')">+ Add Role</button>
+            <form id="addRoleForm-${user.id}" class="form-inline mt-2 d-none" onsubmit="handleAddRole(event, ${user.id})">
+                <select id="roleSelect-${user.id}" class="form-select mb-2">${getRoleOptions(roles, user.roles)}</select>
+                <button type="submit" class="btn btn-primary btn-sm w-100">Add</button>
+            </form>
+            <button class="btn btn-danger btn-sm w-100" onclick="handleDeleteUser(${user.id})">Delete</button>
         `;
-        tableBody.appendChild(row);
+
+        card.appendChild(cardBody);
+        userCardsContainer.appendChild(card);
     });
 }
 
 function getUserRoles(user, roles) {
     if (!user.roles || !Array.isArray(user.roles)) {
-        return 'No roles assigned';
+        return '<li class="list-group-item">No roles assigned</li>';
     }
 
     const userRoles = [];
@@ -197,13 +204,13 @@ function getUserRoles(user, roles) {
     }
 
     if (userRoles.length === 0) {
-        return 'No roles assigned';
+        return '<li class="list-group-item">No roles assigned</li>';
     }
 
     return userRoles.map(role => `
         <li class="list-group-item d-flex justify-content-between align-items-center">
             ${role.name}
-            <button class="btn btn-sm btn-danger ml-2" onclick="handleRemoveRole(${user.id}, ${role.id})">Remove</button>
+            <button class="btn btn-sm btn-danger" onclick="handleRemoveRole(${user.id}, ${role.id})">Remove</button>
         </li>
     `).join('');
 }
@@ -213,6 +220,7 @@ function getRoleOptions(allRoles, userRoles) {
     const filteredRoles = allRoles.filter(role => !userRoleIds.includes(role.id));
     return filteredRoles.map(role => `<option value="${role.id}">${role.name}</option>`).join('');
 }
+
 
 async function loadRoles() {
     const roles = await fetchRoles();

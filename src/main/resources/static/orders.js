@@ -238,32 +238,6 @@ function toggleOrderForm() {
     orderForm.classList.toggle('d-none');
 }
 
-// Function to create a row for archived orders
-function createArchiveOrderRow(archivedOrder) {
-    const ownerDetails = archivedOrder.ownerDetails
-        ? `${archivedOrder.ownerDetails.ownerName || 'N/A'}<br>
-           ${archivedOrder.ownerDetails.ownerAddress || 'N/A'}<br>
-           ${archivedOrder.ownerDetails.ownerEmail || 'N/A'}<br>
-           ${archivedOrder.ownerDetails.ownerMobile || 'N/A'}`
-        : 'N/A';
-    const totalTime = calculateTotalTime(archivedOrder.auditItems);
-    const formattedTotalTime = formatTotalTime(totalTime);
-
-    const row = document.createElement('tr');
-    row.innerHTML = `
-        <td>${archivedOrder.id}</td>
-        <td>${archivedOrder.orderType}</td>
-        <td>${archivedOrder.currentState}</td>
-        <td>${ownerDetails}</td>
-        <td>${archivedOrder.priority}</td>
-        <td>${archivedOrder.amount}</td>
-        <td>${archivedOrder.note ? archivedOrder.note : 'N/A'}</td>
-        <td>${formattedTotalTime}</td>
-    `;
-    return row;
-}
-
-
 // Function to fetch archived orders from the backend
 async function fetchArchivedOrders() {
     try {
@@ -312,6 +286,7 @@ function applyFilter() {
     const filterPriority = document.getElementById('filterPriority').value;
     const filterOwnerDetails = document.getElementById('filterOwnerDetails').value.toLowerCase();
     const filterNote = document.getElementById('filterNote').value.toLowerCase();
+    const filterCreationDate = document.getElementById('filterCreationDate').value.toLowerCase();
 
     const archivedOrderTableBody = document.getElementById('archivedOrderTableBody');
     const rows = archivedOrderTableBody.getElementsByTagName('tr');
@@ -321,13 +296,15 @@ function applyFilter() {
         const priority = row.cells[4].textContent;
         const ownerDetails = row.cells[3].textContent.toLowerCase();
         const note = row.cells[6].textContent.toLowerCase();
+        const creationDate = row.cells[8].textContent.toLowerCase();
 
         const matchesOrderType = !filterOrderType || orderType.includes(filterOrderType);
         const matchesPriority = !filterPriority || priority === filterPriority;
         const matchesOwnerDetails = !filterOwnerDetails || ownerDetails.includes(filterOwnerDetails);
         const matchesNote = !filterNote || note.includes(filterNote);
+        const matchesCreationDate = !filterCreationDate || creationDate.includes(filterCreationDate);
 
-        if (matchesOrderType && matchesPriority && matchesOwnerDetails && matchesNote) {
+        if (matchesOrderType && matchesPriority && matchesOwnerDetails && matchesNote && matchesCreationDate) {
             row.style.display = ''; // Show the row
         } else {
             row.style.display = 'none'; // Hide the row
@@ -340,6 +317,34 @@ document.getElementById('filterOrderType').addEventListener('input', applyFilter
 document.getElementById('filterPriority').addEventListener('input', applyFilter);
 document.getElementById('filterOwnerDetails').addEventListener('input', applyFilter);
 document.getElementById('filterNote').addEventListener('input', applyFilter);
+document.getElementById('filterCreationDate').addEventListener('input', applyFilter);
+
+// Function to create a row for archived orders
+function createArchiveOrderRow(archivedOrder) {
+    const ownerDetails = archivedOrder.ownerDetails
+        ? `${archivedOrder.ownerDetails.ownerName || 'N/A'}<br>
+           ${archivedOrder.ownerDetails.ownerAddress || 'N/A'}<br>
+           ${archivedOrder.ownerDetails.ownerEmail || 'N/A'}<br>
+           ${archivedOrder.ownerDetails.ownerMobile || 'N/A'}`
+        : 'N/A';
+    const totalTime = calculateTotalTime(archivedOrder.auditItems);
+    const formattedTotalTime = formatTotalTime(totalTime);
+    const creationDate = formatTimestamp(archivedOrder.creationDate); // Format the creation date
+
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${archivedOrder.id}</td>
+        <td>${archivedOrder.orderType}</td>
+        <td>${archivedOrder.currentState}</td>
+        <td>${ownerDetails}</td>
+        <td>${archivedOrder.priority}</td>
+        <td>${archivedOrder.amount}</td>
+        <td>${archivedOrder.note ? archivedOrder.note : 'N/A'}</td>
+        <td>${formattedTotalTime}</td>
+        <td>${creationDate}</td>
+    `;
+    return row;
+}
 
 // Function to load archived orders
 async function loadArchivedOrders() {

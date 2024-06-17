@@ -136,23 +136,75 @@ async function handleSubmitOrder(event) {
         isSubmitting = false; // Reset the submission flag
     }
 }
-
-// Function to load orders and populate the order table
 async function loadOrders() {
     try {
         const orders = await fetchOrders();
-        const orderTableBody = document.getElementById('orderTableBody');
-        orderTableBody.innerHTML = '';
-
         orders.forEach(order => {
-            const orderRow = createOrderRow(order);
-            orderTableBody.appendChild(orderRow);
+            addOrderCard(order); // Add each order as a collapsible card
         });
     } catch (error) {
         console.error('Error loading orders:', error);
-        showAlertModal('Error','Failed to load orders. Please try again.');
+        showAlertModal('Error', 'Failed to load orders. Please try again.');
     }
 }
+
+// Function to add an order card to the DOM
+function addOrderCard(order) {
+    const orderCardsContainer = document.getElementById('orderCards');
+
+    const card = document.createElement('div');
+    card.classList.add('card', 'mb-3');
+    card.dataset.orderId = order.id;
+
+    const cardHeader = document.createElement('div');
+    cardHeader.classList.add('card-header', 'd-flex', 'justify-content-between', 'align-items-center');
+
+    // Show owner name in header instead of order.id
+    const ownerName = order.ownerDetails ? order.ownerDetails.ownerName : 'N/A';
+    cardHeader.innerHTML = `
+        <div>
+            <span class="badge bg-primary">${ownerName}</span>
+            ${order.priority ? `<span class="badge bg-secondary">${order.priority}</span>` : ''}
+            ${!order.currentUser ? '<i class="fas fa-exclamation-circle text-danger mx-1"></i>' : ''}
+        </div>
+        <div>
+            <span class="badge bg-info">${order.currentState ? order.currentState.name : 'N/A'}</span>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    `;
+
+    cardHeader.addEventListener('click', () => {
+        cardBody.classList.toggle('d-none');
+        const icon = cardHeader.querySelector('.fa-chevron-down');
+        icon.classList.toggle('fa-chevron-up');
+    });
+
+    const cardBody = document.createElement('div');
+    cardBody.classList.add('card-body', 'd-none');
+    cardBody.innerHTML = `
+        <p><strong>Owner Details:</strong><br>
+           Name: ${order.ownerDetails ? order.ownerDetails.ownerName : 'N/A'}<br>
+           Address: ${order.ownerDetails ? order.ownerDetails.ownerAddress : 'N/A'}<br>
+           Email: ${order.ownerDetails ? order.ownerDetails.ownerEmail : 'N/A'}<br>
+           Mobile: ${order.ownerDetails ? order.ownerDetails.ownerMobile : 'N/A'}</p>
+        <p><strong>Priority:</strong> ${order.priority ? order.priority : 'N/A'}</p>
+        <p><strong>Amount:</strong> ${order.amount ? order.amount : 'N/A'}</p>
+        <p><strong>Note:</strong> ${order.note ? order.note : 'N/A'}</p>
+        <p><strong>Creation Date:</strong> ${formatTimestamp(order.timestamp)}</p>
+        <p><strong>Assigned to:</strong> ${order.currentUser ? order.currentUser.username : 'N/A'}</p>
+        <p><strong>Pending States:</strong> ${getPendingStates(order)}</p>
+        <p><strong>Pending Time:</strong> ${calculateTotalEstimate(order, getPendingStates(order))}</p>
+        <p><strong>Passed Time:</strong> ${calculateTimeDifference(new Date(), timestampToDate(order.timestamp))}</p>
+
+        <button class="btn btn-danger" onclick="deleteOrder(${order.id})">Delete</button>
+    `;
+
+    card.appendChild(cardHeader);
+    card.appendChild(cardBody);
+    orderCardsContainer.appendChild(card);
+}
+
+
 
 // Function to fetch orders from the backend
 async function fetchOrders() {

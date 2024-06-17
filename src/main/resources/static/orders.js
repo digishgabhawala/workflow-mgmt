@@ -263,25 +263,6 @@ function createArchiveOrderRow(archivedOrder) {
     return row;
 }
 
-// Function to load archived orders
-async function loadArchivedOrders() {
-    try {
-        const archivedOrders = await fetchArchivedOrders();
-        const archivedOrderTableBody = document.getElementById('archivedOrderTableBody');
-        archivedOrderTableBody.innerHTML = '';
-
-        archivedOrders.forEach(order => {
-            const orderRow = createArchiveOrderRow(order);
-            archivedOrderTableBody.appendChild(orderRow);
-        });
-
-        // Show the archived order table and hide the main order table
-        document.getElementById('archivedOrderTable').classList.remove('d-none');
-    } catch (error) {
-        console.error('Error loading archived orders:', error);
-        showAlertModal('Error','Failed to load archived orders. Please try again.');
-    }
-}
 
 // Function to fetch archived orders from the backend
 async function fetchArchivedOrders() {
@@ -324,3 +305,60 @@ function formatTotalTime(totalTime) {
 
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
+
+// Function to apply filter to archived orders
+function applyFilter() {
+    const filterOrderType = document.getElementById('filterOrderType').value.toLowerCase();
+    const filterPriority = document.getElementById('filterPriority').value;
+    const filterOwnerDetails = document.getElementById('filterOwnerDetails').value.toLowerCase();
+    const filterNote = document.getElementById('filterNote').value.toLowerCase();
+
+    const archivedOrderTableBody = document.getElementById('archivedOrderTableBody');
+    const rows = archivedOrderTableBody.getElementsByTagName('tr');
+
+    for (let row of rows) {
+        const orderType = row.cells[1].textContent.toLowerCase();
+        const priority = row.cells[4].textContent;
+        const ownerDetails = row.cells[3].textContent.toLowerCase();
+        const note = row.cells[6].textContent.toLowerCase();
+
+        const matchesOrderType = !filterOrderType || orderType.includes(filterOrderType);
+        const matchesPriority = !filterPriority || priority === filterPriority;
+        const matchesOwnerDetails = !filterOwnerDetails || ownerDetails.includes(filterOwnerDetails);
+        const matchesNote = !filterNote || note.includes(filterNote);
+
+        if (matchesOrderType && matchesPriority && matchesOwnerDetails && matchesNote) {
+            row.style.display = ''; // Show the row
+        } else {
+            row.style.display = 'none'; // Hide the row
+        }
+    }
+}
+
+// Add event listeners to filter input fields for real-time filtering
+document.getElementById('filterOrderType').addEventListener('input', applyFilter);
+document.getElementById('filterPriority').addEventListener('input', applyFilter);
+document.getElementById('filterOwnerDetails').addEventListener('input', applyFilter);
+document.getElementById('filterNote').addEventListener('input', applyFilter);
+
+// Function to load archived orders
+async function loadArchivedOrders() {
+    try {
+        const archivedOrders = await fetchArchivedOrders();
+        const archivedOrderTableBody = document.getElementById('archivedOrderTableBody');
+        archivedOrderTableBody.innerHTML = '';
+
+        archivedOrders.forEach(order => {
+            const orderRow = createArchiveOrderRow(order);
+            archivedOrderTableBody.appendChild(orderRow);
+        });
+
+        // Show and reset the filter form and the archived order table
+        document.getElementById('archivedOrderTable').classList.remove('d-none');
+        applyFilter(); // Apply filter to the newly loaded data
+    } catch (error) {
+        console.error('Error loading archived orders:', error);
+        showAlertModal('Error', 'Failed to load archived orders. Please try again.');
+    }
+}
+

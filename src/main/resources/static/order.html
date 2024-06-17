@@ -75,6 +75,7 @@
                 </tbody>
             </table>
             <button id="loadArchivedOrdersButton" class="btn btn-secondary mb-4" onclick="loadArchivedOrders()">Load Archived Orders</button>
+            <!-- Archived Orders Table -->
             <table id="archivedOrderTable" class="table table-striped d-none">
                 <thead>
                 <tr>
@@ -85,13 +86,22 @@
                     <th>Priority</th>
                     <th>Amount</th>
                     <th>Note</th>
-                    <th>Time</th>
+                    <th>Total Time</th>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th><input type="text" class="form-control" id="filterOrderType" placeholder="Filter by order type"></th>
+                    <th></th>
+                    <th><input type="text" class="form-control" id="filterOwnerDetails" placeholder="Filter by owner details"></th>
+                    <th><input type="number" class="form-control" id="filterPriority" placeholder="Filter by priority"></th>
+                    <th></th>
+                    <th><input type="text" class="form-control" id="filterNote" placeholder="Filter by note"></th>
+                    <th></th>
                 </tr>
                 </thead>
-                <tbody id="archivedOrderTableBody">
-                <!-- Archived orders will be dynamically loaded here -->
-                </tbody>
+                <tbody id="archivedOrderTableBody"></tbody>
             </table>
+
         </main>
     </div>
 </div>

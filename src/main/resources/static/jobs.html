@@ -13,16 +13,13 @@
 <body>
 <div class="container">
     <header class="bg-primary text-white text-center py-3">
-        <h1>Manage your Jobs </h1>
+        <h1>Manage your Jobs</h1>
     </header>
 
     <!-- Jobs Section -->
     <div class="d-flex justify-content-between align-items-center">
         <h2 class="d-flex align-items-center">
             My Jobs
-            <button id="toggleJobsCardsBtn" class="btn btn-primary my-3">
-                <i id="jobsCardsIcon" class="fas fa-eye"></i> <!-- Show icon -->
-            </button>
         </h2>
         <button id="showJobFormButton" class="btn btn-primary my-3" onclick="showForm('jobForm', 'showJobFormButton')">Create Job</button>
     </div>
@@ -50,9 +47,6 @@
     <div class="d-flex justify-content-between align-items-center">
         <h2 class="d-flex align-items-center">
             Job States
-            <button id="toggleJobStatesTableBtn" class="btn btn-primary my-3">
-                <i id="jobStatesTableIcon" class="fas fa-eye"></i> <!-- Show icon -->
-            </button>
         </h2>
         <button id="showJobStateFormButton" class="btn btn-primary my-3" onclick="showForm('jobStateForm', 'showJobStateFormButton')">Create Job State</button>
     </div>
@@ -65,17 +59,8 @@
         </div>
         <button type="submit" class="btn btn-primary">Create Job State</button>
     </form>
-    <table id="jobStatesTable" class="table table-bordered">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Roles</th>
-            <th>Estimate</th>
-        </tr>
-        </thead>
-        <tbody id="jobStateTableBody"></tbody>
-    </table>
+
+    <div id="jobStatesCards" class="row"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>

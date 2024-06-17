@@ -6,60 +6,6 @@ async function fetchRoles() {
 }
 
 
-async function loadJobStates() {
-    const jobStates = await fetchJobStates();
-    const tableBody = document.getElementById('jobStateTableBody');
-    tableBody.innerHTML = '';
-
-    jobStates.forEach(jobState => {
-        const rolesList = jobState.roles ? jobState.roles.map(role => `
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                ${role}
-                <button class="btn btn-sm btn-danger ml-2" onclick="handleRemoveRole(event, ${jobState.id}, '${role}')">Remove</button>
-            </li>
-        `).join('') : '';
-
-        const addRoleForm = `
-            <button class="btn btn-sm btn-success btn-block" onclick="document.getElementById('addRoleForm-${jobState.id}').classList.toggle('d-none')">
-                <i class="fas fa-plus"></i> Add Role
-            </button>
-            <form id="addRoleForm-${jobState.id}" class="form-inline mt-2 d-none" onsubmit="handleAddRole(event, ${jobState.id})">
-                <select id="roleDropdown-${jobState.id}" class="form-control mr-2"></select>
-                <button type="submit" class="btn btn-primary btn-sm">Add</button>
-            </form>
-        `;
-
-        const estimate = jobState.estimate ? `${jobState.estimate[0]}h ${jobState.estimate[1]}m` : 'N/A';
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${jobState.id}</td>
-            <td>${jobState.name}</td>
-            <td>
-                <ul class="list-group">
-                    <li class="list-group-item">
-                        ${addRoleForm}
-                    </li>
-                    ${rolesList}
-                </ul>
-            </td>
-            <td>
-                <span id="estimate-${jobState.id}">${estimate}</span>
-                <button class="btn btn-sm btn-primary ml-2" onclick="showTimeInput(${jobState.id})">Edit</button>
-                <input type="time" id="timeInput-${jobState.id}" class="hidden time-input">
-            </td>
-        `;
-        tableBody.appendChild(row);
-
-        // Populate the role dropdown after adding the row
-        populateRoleDropdown(jobState.id);
-
-        // Initialize timepicker
-        document.getElementById(`timeInput-${jobState.id}`).addEventListener('change', function() {
-                    handleTimeInputChange(jobState.id, this.value);
-                });
-    });
-}
 
 async function handleAddRole(event, jobStateId) {
     event.preventDefault();
@@ -83,7 +29,7 @@ async function handleRemoveRole(event, jobStateId, roleName) {
 
 function showTimeInput(jobStateId) {
     const timeInput = document.getElementById(`timeInput-${jobStateId}`);
-    timeInput.classList.remove('hidden');
+    timeInput.classList.toggle('d-none');
     timeInput.focus();
 }
 
@@ -136,10 +82,10 @@ window.onload = async function() {
     await loadJobStates();
 
     // Set up event listener for each job name header
-    const jobNameHeaders = document.querySelectorAll('.job-name-header');
-    jobNameHeaders.forEach(header => {
-        header.addEventListener('click', () => toggleJobCard(header));
-    });
+//    const jobNameHeaders = document.querySelectorAll('.job-name-header');
+//    jobNameHeaders.forEach(header => {
+//        header.addEventListener('click', () => toggleJobCard(header));
+//    });
 };
 
 
@@ -600,7 +546,7 @@ function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList
     `;
 
     const card = document.createElement('div');
-    card.classList.add('col-md-4', 'mb-4');
+    card.classList.add('col-12', 'mb-4');
     card.innerHTML = `
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -625,5 +571,70 @@ function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList
 
     return card;
 }
+async function loadJobStates() {
+    const jobStates = await fetchJobStates();
+    const jobStatesCards = document.getElementById('jobStatesCards');
+    jobStatesCards.innerHTML = '';
+
+    jobStates.forEach(jobState => {
+        const rolesList = jobState.roles ? jobState.roles.map(role => `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                ${role}
+                <button class="btn btn-sm btn-danger ml-2" onclick="handleRemoveRole(event, ${jobState.id}, '${role}')">Remove</button>
+            </li>
+        `).join('') : '';
+
+        const addRoleForm = `
+            <button class="btn btn-sm btn-success btn-block" onclick="document.getElementById('addRoleForm-${jobState.id}').classList.toggle('d-none')">
+                <i class="fas fa-plus"></i> Add Role
+            </button>
+            <form id="addRoleForm-${jobState.id}" class="form-inline mt-2 d-none" onsubmit="handleAddRole(event, ${jobState.id})">
+                <select id="roleDropdown-${jobState.id}" class="form-control mr-2"></select>
+                <button type="submit" class="btn btn-primary btn-sm">Add</button>
+            </form>
+        `;
+
+        const estimate = jobState.estimate ? `${jobState.estimate[0]}h ${jobState.estimate[1]}m` : 'N/A';
+
+        const card = document.createElement('div');
+        card.className = 'card mb-3';
+
+        card.innerHTML = `
+            <div class="card-header d-flex justify-content-between align-items-center" role="button" onclick="toggleCardBody(this)">
+                <h5 class="card-title m-0">${jobState.name}</h5>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-body d-none">
+                <h5>Roles</h5>
+                <ul class="list-group">
+                    ${rolesList}
+                    <li class="list-group-item">
+                        ${addRoleForm}
+                    </li>
+                </ul>
+                <h5>Estimate</h5>
+                <div class="d-flex align-items-center">
+                    <span id="estimate-${jobState.id}" class="mr-2">${estimate}</span>
+                    <button class="btn btn-sm btn-primary ml-2" onclick="showTimeInput(${jobState.id})">Edit</button>
+                    <input type="time" id="timeInput-${jobState.id}" class="form-control ml-2 d-none time-input">
+                </div>
+            </div>
+        `;
+
+        jobStatesCards.appendChild(card);
+
+        // Populate the role dropdown after adding the card
+        populateRoleDropdown(jobState.id);
+
+        // Initialize timepicker
+        document.getElementById(`timeInput-${jobState.id}`).addEventListener('change', function() {
+            handleTimeInputChange(jobState.id, this.value);
+        });
+    });
+}
 
 
+function toggleCardBody(headerElement) {
+    const cardBody = headerElement.nextElementSibling;
+    cardBody.classList.toggle('d-none');
+}

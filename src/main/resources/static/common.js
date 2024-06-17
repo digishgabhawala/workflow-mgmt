@@ -18,10 +18,14 @@ function createOffcanvasSidebar(user) {
     let usersLink = '';
     let ordersLink = '';
     let adminActions = '';
+    let oldOrdersLink = '';
+    let jobsLink = '';
 
     if (user.roles.includes('ROLE_ADMIN')) {
         usersLink = '<a href="users.html">Users</a>';
         ordersLink = '<a href="order.html">Orders Dashboard</a>';
+        oldOrdersLink = '<a href="completedOrders.html">Old Orders</a>';
+        jobsLink = '<a href="jobs.html">Manage Job</a>';
         adminActions = `
             <button id="exportButton" class="btn btn-secondary mt-3" onclick="handleExport()">Export Database</button>
             <button id="importButton" class="btn btn-secondary mt-3" onclick="showImportForm()">Import Database</button>
@@ -42,6 +46,8 @@ function createOffcanvasSidebar(user) {
                 <h3>Hello, ${user.username}</h3>
                 <a href="myorders.html">My Orders</a>
                 ${ordersLink}
+                ${oldOrdersLink}
+                ${jobsLink}
                 ${usersLink}
                 ${adminActions}
                 <button id="changePasswordButton" class="btn btn-secondary mt-3" onclick="showChangePasswordModal()">Change Password</button>

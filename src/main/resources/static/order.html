@@ -10,27 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="common.css">
 
-    <style>
-        .archived-table {
-            font-size: 0.8rem; /* Adjust as needed */
-        }
-
-        /* Optional: Reduce padding for table cells */
-        .archived-table th,
-        .archived-table td {
-            padding: 0.3rem; /* Adjust as needed */
-        }
-
-        /* Make the input fields smaller */
-        .archived-table .form-control {
-            font-size: 0.8rem; /* Adjust as needed */
-            padding: 0.2rem; /* Adjust as needed */
-        }
-
-        .card-header {
-            cursor: pointer;
-        }
-    </style>
 </head>
 <body>
 <div class="container">
@@ -77,37 +56,6 @@
             </form>
             <div id="orderCards" class="mb-4">
                 <!-- Order cards will be dynamically loaded here -->
-            </div>
-            <button id="loadArchivedOrdersButton" class="btn btn-secondary mb-4" onclick="loadArchivedOrders()">Load Archived Orders</button>
-            <!-- Archived Orders Table -->
-            <div id="archivedOrderTable" class="table-responsive d-none">
-                <table class="table table-bordered table-striped table-hover">
-                    <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Order Type</th>
-                        <th>Current State</th>
-                        <th>Owner Details</th>
-                        <th>Priority</th>
-                        <th>Amount</th>
-                        <th>Note</th>
-                        <th>Total Time</th>
-                        <th>Creation Date</th>
-                    </tr>
-                    <tr>
-                        <th></th>
-                        <th><input type="text" class="form-control" id="filterOrderType" placeholder="Filter by order type"></th>
-                        <th></th>
-                        <th><input type="text" class="form-control" id="filterOwnerDetails" placeholder="Filter by owner details"></th>
-                        <th><input type="number" class="form-control" id="filterPriority" placeholder="Filter by priority"></th>
-                        <th></th>
-                        <th><input type="text" class="form-control" id="filterNote" placeholder="Filter by note"></th>
-                        <th></th>
-                        <th><input type="text" class="form-control" id="filterCreationDate" placeholder="Filter by creation date"></th>
-                    </tr>
-                    </thead>
-                    <tbody id="archivedOrderTableBody"></tbody>
-                </table>
             </div>
         </main>
     </div>

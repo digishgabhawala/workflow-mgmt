@@ -22,10 +22,10 @@ function createOffcanvasSidebar(user) {
     let jobsLink = '';
 
     if (user.roles.includes('ROLE_ADMIN')) {
-        usersLink = '<a href="users.html">Users</a>';
-        ordersLink = '<a href="order.html">Orders Dashboard</a>';
-        oldOrdersLink = '<a href="completedOrders.html">Old Orders</a>';
-        jobsLink = '<a href="jobs.html">Manage Job</a>';
+        usersLink = '<button class="btn btn-secondary mt-3" onclick="window.location.href=\'users.html\'">Users</button>';
+        ordersLink = '<button class="btn btn-secondary mt-3" onclick="window.location.href=\'order.html\'">Orders Dashboard</button>';
+        oldOrdersLink = '<button class="btn btn-secondary mt-3" onclick="window.location.href=\'completedOrders.html\'">Old Orders</button>';
+        jobsLink = '<button class="btn btn-secondary mt-3" onclick="window.location.href=\'jobs.html\'">Manage Job</button>';
         adminActions = `
             <button id="exportButton" class="btn btn-secondary mt-3" onclick="handleExport()">Export Database</button>
             <button id="importButton" class="btn btn-secondary mt-3" onclick="showImportForm()">Import Database</button>
@@ -44,7 +44,7 @@ function createOffcanvasSidebar(user) {
             </div>
             <div class="offcanvas-body">
                 <h3>Hello, ${user.username}</h3>
-                <a href="myorders.html">My Orders</a>
+                <button class="btn btn-secondary mt-3" onclick="window.location.href='myorders.html'">My Orders</button>
                 ${ordersLink}
                 ${oldOrdersLink}
                 ${jobsLink}
@@ -130,7 +130,7 @@ async function handleChangePassword(event) {
     const confirmNewPassword = document.getElementById('confirmNewPassword').value;
 
     if (newPassword !== confirmNewPassword) {
-        alert('New password and confirm new password do not match.');
+        showAlertModal('Error','New password and confirm new password do not match.');
         return;
     }
 
@@ -222,7 +222,7 @@ async function handleImport(event) {
     }
 }
 
-// Fetch the user details and insert the header, sidebar, and footer
+// Fetch the user details and insert the header, sidebar, and footer into the page
 document.addEventListener('DOMContentLoaded', () => {
     loadUser().then(user => {
         insertHeaderSidebarAndFooter(user);
@@ -317,7 +317,7 @@ function createAlertModal(title, message) {
 }
 
 // Function to show the alert modal
-function showAlertModal(title, message,onCloseCallback) {
+function showAlertModal(title, message, onCloseCallback) {
     // Remove any existing alert modal first
     const existingModal = document.getElementById('alertModal');
     if (existingModal) {
@@ -340,4 +340,3 @@ function showAlertModal(title, message,onCloseCallback) {
         }
     });
 }
-

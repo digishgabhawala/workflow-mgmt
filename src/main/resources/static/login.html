@@ -48,6 +48,11 @@
             text-align: center;
             padding: 10px 0;
         }
+        .error-message {
+            color: red;
+            font-weight: bold;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -64,6 +69,7 @@
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required>
         <button type="submit">Login</button>
+        <div class="error-message" id="errorMessage" style="display: none;">Invalid username or password. Please try again.</div>
     </form>
 </div>
 
@@ -89,8 +95,16 @@
         });
     }
 
+    function showErrorIfPresent() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('error')) {
+            document.getElementById('errorMessage').style.display = 'block';
+        }
+    }
+
     window.onload = function() {
         setCsrfToken();
+        showErrorIfPresent();
     };
 </script>
 

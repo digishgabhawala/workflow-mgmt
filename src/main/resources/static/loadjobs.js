@@ -165,11 +165,11 @@ async function handleSubmitJob(event) {
             document.getElementById('jobForm').classList.add('d-none');
             document.getElementById('showJobFormButton').style.display = 'inline-block';
         } else if(response.message){
-            alert (response.message);
+            showAlertModal('Error',response.message);
         }
     } catch (error) {
         console.error('Error creating job:', error);
-        alert('Failed to create job. Please try again.');
+        showAlertModal('Error','Failed to create job. Please try again.');
     }
 }
 

@@ -67,7 +67,7 @@ async function handleSubmitUser(event) {
     const selectedRoles = Array.from(rolesSelect.selectedOptions).map(option => option.value);
 
     if (selectedRoles.length === 0) {
-        alert('Please select at least one role');
+        showAlertModal('Error','Please select at least one role');
         return;
     }
 
@@ -109,7 +109,7 @@ async function handleAddRole(event, userId) {
         loadUsers();
         document.getElementById(`addRoleForm-${userId}`).classList.add('d-none');
     } else {
-        alert('Failed to add role to user');
+        showAlertModal('Error','Failed to add role to user');
     }
 }
 
@@ -119,7 +119,7 @@ async function handleRemoveRole(userId, roleId) {
     if (removedRole.id) {
         loadUsers();
     } else {
-        alert('Failed to remove role from user');
+        showAlertModal('Error','Failed to remove role from user');
     }
 }
 
@@ -235,7 +235,7 @@ async function deleteUser(userId, csrfToken) {
     if (response.ok) {
         loadUsers();
     } else {
-        alert('Failed to delete user');
+        showAlertModal('Error','Failed to delete user');
     }
 }
 

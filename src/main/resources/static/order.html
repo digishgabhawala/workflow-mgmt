@@ -10,6 +10,24 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="common.css">
 
+    <style>
+    .archived-table {
+        font-size: 0.8rem; /* Adjust as needed */
+    }
+
+    /* Optional: Reduce padding for table cells */
+    .archived-table th,
+    .archived-table td {
+        padding: 0.3rem; /* Adjust as needed */
+    }
+
+    /* Make the input fields smaller */
+    .archived-table .form-control {
+        font-size: 0.8rem; /* Adjust as needed */
+        padding: 0.2rem; /* Adjust as needed */
+    }
+</style>
+
 </head>
 <body>
 
@@ -56,6 +74,8 @@
                 </div>
                 <button type="submit" class="btn btn-primary">Create Order</button>
             </form>
+            <div id="orderTable" class="table-responsive">
+
             <table class="table table-striped">
                 <thead>
                 <tr>
@@ -74,9 +94,13 @@
                 <!-- Orders will be dynamically loaded here -->
                 </tbody>
             </table>
+            </div>
             <button id="loadArchivedOrdersButton" class="btn btn-secondary mb-4" onclick="loadArchivedOrders()">Load Archived Orders</button>
             <!-- Archived Orders Table -->
-            <table id="archivedOrderTable" class="table table-striped d-none">
+            <div id="archivedOrderTable" class="table-responsive d-none">
+                <table class="table table-bordered table-striped table-hover">
+
+<!--            <table id="archivedOrderTable" class="table table-striped d-none">-->
                 <thead>
                 <tr>
                     <th>ID</th>
@@ -103,6 +127,7 @@
                 </thead>
                 <tbody id="archivedOrderTableBody"></tbody>
             </table>
+            </div>
 
         </main>
     </div>

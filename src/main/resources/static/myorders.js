@@ -13,19 +13,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-async function fetchCsrfToken() {
-    try {
-        const response = await fetch('/csrf-token');
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        return data.token;
-    } catch (error) {
-        console.error('Error fetching CSRF token:', error);
-        throw new Error('Failed to fetch CSRF token');
-    }
-}
 
 
 async function loadMyOrders(csrfToken) {

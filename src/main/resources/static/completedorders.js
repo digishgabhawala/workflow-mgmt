@@ -1,21 +1,5 @@
 document.addEventListener('DOMContentLoaded', loadArchivedOrders);
 
-// Function to fetch the CSRF token from the backend
-async function fetchCsrfToken() {
-    try {
-        const response = await fetch('/csrf-token');
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        return data.token;
-    } catch (error) {
-        console.error('Error fetching CSRF token:', error);
-        throw new Error('Failed to fetch CSRF token');
-    }
-}
-
-
 // Function to format timestamp into 'DD-MM-YY HH:MM'
 function formatTimestamp(timestamp) {
     const [year, month, day, hour, minute, second, nanosecond] = timestamp;

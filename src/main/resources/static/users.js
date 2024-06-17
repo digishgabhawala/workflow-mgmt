@@ -1,8 +1,3 @@
-async function fetchCsrfToken() {
-    const response = await fetch('/csrf-token');
-    const data = await response.json();
-    return data.token;
-}
 
 async function fetchUsers() {
     const response = await fetch('/users');

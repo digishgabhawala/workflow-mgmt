@@ -16,7 +16,13 @@ public class OrderController {
 
     @GetMapping
     public List<Order> getAllOrders() {
-        return orderService.getAllOrders();
+        List<Order> orders = orderService.getAllOrders();
+        for (Order order: orders) {
+            if(order.getCurrentUser() != null){
+                order.getCurrentUser().setPassword("");
+            }
+        }
+        return orders;
     }
 
     @GetMapping("/{id}")

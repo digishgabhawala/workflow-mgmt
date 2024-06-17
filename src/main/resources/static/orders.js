@@ -198,6 +198,7 @@ function createOrderRow(order) {
 
     const pendingStates = getPendingStates(order);
     const totalEstimate = calculateTotalEstimate(order, pendingStates);
+    const nextUser = order.currentUser ? order.currentUser.username : 'N/A';
 
     const row = document.createElement('tr');
     row.innerHTML = `
@@ -212,6 +213,7 @@ function createOrderRow(order) {
         <td>${pendingStates}</td>
         <td>${totalEstimate}</td>
         <td>${passedTime}</td>
+        <td>${nextUser}</td>
         <td><button class="btn btn-danger" onclick="deleteOrder(${order.id})">Delete</button></td>
     `;
     return row;

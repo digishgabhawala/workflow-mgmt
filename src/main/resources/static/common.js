@@ -25,7 +25,7 @@ function createOffcanvasSidebar(user) {
         usersLink = '<button class="btn btn-secondary mt-3" onclick="window.location.href=\'users.html\'">Users</button>';
         ordersLink = '<button class="btn btn-secondary mt-3" onclick="window.location.href=\'order.html\'">Orders Dashboard</button>';
         oldOrdersLink = '<button class="btn btn-secondary mt-3" onclick="window.location.href=\'completedOrders.html\'">Old Orders</button>';
-        jobsLink = '<button class="btn btn-secondary mt-3" onclick="window.location.href=\'jobs.html\'">Manage Job</button>';
+        jobsLink = '<button class="btn btn-secondary mt-3" onclick="window.location.href=\'jobs.html\'">Manage Jobs</button>';
         adminActions = `
             <button id="exportButton" class="btn btn-secondary mt-3" onclick="handleExport()">Export Database</button>
             <button id="importButton" class="btn btn-secondary mt-3" onclick="showImportForm()">Import Database</button>

@@ -181,10 +181,13 @@ function formatTimestamp(timestamp) {
     return `${dayStr}-${monthStr}-${yearStr} ${hourStr}:${minuteStr}`;
 }
 
+
 // Function to create an order row element for the table
 function createOrderRow(order) {
     const startTime = formatTimestamp(order.timestamp);
-    const endTime = startTime; // Initially set end time to start time
+    const now = new Date();
+    const startTimeDate = new Date(order.timestamp[0], order.timestamp[1] - 1, order.timestamp[2], order.timestamp[3], order.timestamp[4], order.timestamp[5], order.timestamp[6] / 1000000);
+    const passedTime = calculateTimeDifference(now, startTimeDate);
 
     const ownerDetails = order.ownerDetails
         ? `${order.ownerDetails.ownerName || 'N/A'}<br>
@@ -192,6 +195,9 @@ function createOrderRow(order) {
            ${order.ownerDetails.ownerEmail || 'N/A'}<br>
            ${order.ownerDetails.ownerMobile || 'N/A'}`
         : 'N/A';
+
+    const pendingStates = getPendingStates(order);
+    const totalEstimate = calculateTotalEstimate(order, pendingStates);
 
     const row = document.createElement('tr');
     row.innerHTML = `
@@ -203,11 +209,71 @@ function createOrderRow(order) {
         <td>${order.amount ? order.amount : 'N/A'}</td>
         <td>${order.note ? order.note : 'N/A'}</td>
         <td>${startTime}</td>
-        <td>${endTime}</td>
+        <td>${pendingStates}</td>
+        <td>${totalEstimate}</td>
+        <td>${passedTime}</td>
         <td><button class="btn btn-danger" onclick="deleteOrder(${order.id})">Delete</button></td>
     `;
     return row;
 }
+
+// Function to calculate total estimate time from pending states
+function calculateTotalEstimate(order, pendingStates) {
+    const orderType = order.orderType;
+    const jobStates = orderType.jobStates;
+
+    let totalHours = 0;
+    let totalMinutes = 0;
+
+    pendingStates.split(' -> ').forEach(stateName => {
+        const jobState = jobStates.find(state => state.name === stateName);
+        if (jobState && jobState.estimate) {
+            totalHours += jobState.estimate[0];
+            totalMinutes += jobState.estimate[1];
+        }
+    });
+
+    totalHours += Math.floor(totalMinutes / 60);
+    totalMinutes = totalMinutes % 60;
+
+    return `${totalHours}h ${totalMinutes}m`;
+}
+
+// Function to calculate time difference between two dates
+function calculateTimeDifference(now, startTimeDate) {
+    const diffMs = now - startTimeDate;
+    const diffHrs = Math.floor(diffMs / 3600000); // milliseconds to hours
+    const diffMins = Math.floor((diffMs % 3600000) / 60000); // remaining milliseconds to minutes
+
+    return `${diffHrs}h ${diffMins}m`;
+}
+
+// Function to get pending states as a string representation
+function getPendingStates(order) {
+    const orderType = order.orderType;
+    const currentState = order.currentState;
+    const fromJobStateIds = orderType.fromJobStateIds;
+    const toJobStateIds = orderType.toJobStateIds;
+    const endState = orderType.endState;
+
+    let pendingStates = [];
+    let currentStateId = currentState.id;
+    let currentIndex = fromJobStateIds.indexOf(currentStateId);
+
+    while (currentStateId !== endState.id && currentIndex !== -1) {
+        const nextStateId = toJobStateIds[currentIndex];
+        const nextState = orderType.jobStates.find(state => state.id === nextStateId);
+
+        if (!nextState) break;
+
+        pendingStates.push(nextState.name);
+        currentStateId = nextState.id;
+        currentIndex = fromJobStateIds.indexOf(currentStateId);
+    }
+
+    return pendingStates.join(' -> ');
+}
+
 
 // Function to delete an order
 async function deleteOrder(orderId) {

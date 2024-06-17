@@ -10,7 +10,7 @@ public class ArchivedAudit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long orderType;
+    private Long userId;
     private LocalDateTime createdAt;
 
     @Column(updatable = false)
@@ -26,12 +26,12 @@ public class ArchivedAudit {
         this.id = id;
     }
 
-    public Long getOrderType() {
-        return orderType;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setOrderType(Long orderType) {
-        this.orderType = orderType;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public LocalDateTime getCreatedAt() {

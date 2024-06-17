@@ -12,7 +12,7 @@ async function initializeOrderForm() {
         await loadOrders(); // Load existing orders on page load
     } catch (error) {
         console.error('Error initializing order form:', error);
-        alert('Failed to initialize order form. Please try again.');
+        showAlertModal('Error','Failed to initialize order form. Please try again.')
     }
 }
 
@@ -31,7 +31,7 @@ async function populateOrderTypeDropdown() {
         });
     } catch (error) {
         console.error('Error populating order type dropdown:', error);
-        alert('Failed to populate order type dropdown. Please try again.');
+        showAlertModal('Error','Failed to populate order type dropdown. Please try again.');
     }
 }
 
@@ -121,14 +121,17 @@ async function handleSubmitOrder(event) {
     try {
         const createdOrder = await createOrder(order);
         if (createdOrder.id) {
-            alert('Order created successfully!');
-            window.location.reload();
+
+            showAlertModal('Success', 'Order created successfully!', () => {
+                    window.location.reload();
+                });
+
         } else {
-            alert('Failed to create order. Please try again.');
+            showAlertModal('Error','Failed to create order. Please try again.');
         }
     } catch (error) {
         console.error('Error creating order:', error);
-        alert('Failed to create order. Please try again.');
+        showAlertModal('Error','Failed to create order. Please try again.');
     } finally {
         isSubmitting = false; // Reset the submission flag
     }
@@ -147,7 +150,7 @@ async function loadOrders() {
         });
     } catch (error) {
         console.error('Error loading orders:', error);
-        alert('Failed to load orders. Please try again.');
+        showAlertModal('Error','Failed to load orders. Please try again.');
     }
 }
 
@@ -219,11 +222,13 @@ async function deleteOrder(orderId) {
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
-        alert('Order deleted successfully!');
-        window.location.reload();
+        showAlertModal('Success','Order deleted successfully!',() => {
+                                                                       window.location.reload();
+                                                                   });
+
     } catch (error) {
         console.error('Error deleting order:', error);
-        alert('Failed to delete order. Please try again.');
+        showAlertModal('Error','Failed to delete order. Please try again.');
     }
 }
 
@@ -241,6 +246,8 @@ function createArchiveOrderRow(archivedOrder) {
            ${archivedOrder.ownerDetails.ownerEmail || 'N/A'}<br>
            ${archivedOrder.ownerDetails.ownerMobile || 'N/A'}`
         : 'N/A';
+    const totalTime = calculateTotalTime(archivedOrder.auditItems);
+    const formattedTotalTime = formatTotalTime(totalTime);
 
     const row = document.createElement('tr');
     row.innerHTML = `
@@ -251,6 +258,7 @@ function createArchiveOrderRow(archivedOrder) {
         <td>${archivedOrder.priority}</td>
         <td>${archivedOrder.amount}</td>
         <td>${archivedOrder.note ? archivedOrder.note : 'N/A'}</td>
+        <td>${formattedTotalTime}</td>
     `;
     return row;
 }
@@ -271,7 +279,7 @@ async function loadArchivedOrders() {
         document.getElementById('archivedOrderTable').classList.remove('d-none');
     } catch (error) {
         console.error('Error loading archived orders:', error);
-        alert('Failed to load archived orders. Please try again.');
+        showAlertModal('Error','Failed to load archived orders. Please try again.');
     }
 }
 
@@ -288,4 +296,31 @@ async function fetchArchivedOrders() {
         console.error('Error fetching archived orders:', error);
         throw new Error('Failed to fetch archived orders');
     }
+}
+
+// Function to convert timestamp array to Date object
+function timestampToDate(timestamp) {
+    const [year, month, day, hour, minute, second, nanosecond] = timestamp;
+    return new Date(year, month - 1, day, hour, minute, second, nanosecond / 1000000);
+}
+
+// Function to calculate total time taken for an order
+function calculateTotalTime(auditItems) {
+    let totalTime = 0; // Time in milliseconds
+    auditItems.forEach(item => {
+        const createdAt = timestampToDate(item.createdAt);
+        const archivedAt = timestampToDate(item.archivedAt);
+        totalTime += (archivedAt - createdAt);
+    });
+    return totalTime;
+}
+
+
+// Function to format total time taken into 'HH:MM:SS'
+function formatTotalTime(totalTime) {
+    const seconds = Math.floor((totalTime / 1000) % 60);
+    const minutes = Math.floor((totalTime / (1000 * 60)) % 60);
+    const hours = Math.floor((totalTime / (1000 * 60 * 60)) % 24);
+
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }

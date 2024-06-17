@@ -111,6 +111,7 @@ public class OrderService {
             archivedOrder.setCurrentState(order.getCurrentState().getName());
             archivedOrder.setNote(order.getNote());
             archivedOrder.setPriority(order.getPriority());
+            archivedOrder.setCreationDate(order.getTimestamp());
             if(null != order.getOwnerDetails() ){
                 OwnerDetails ownerDetails = new OwnerDetails();
                 ownerDetails.setOwnerName(order.getOwnerDetails().getOwnerName());
@@ -128,7 +129,7 @@ public class OrderService {
                 ArchivedAudit archivedAudit = new ArchivedAudit();
                 archivedAudit.setId(audit.getId());
                 archivedAudit.setCreatedAt(audit.getTimestamp());
-//                archivedAuditRepository.save(archivedAudit);
+                archivedAudit.setUserId(audit.getUser().getId());
                 archivedAudits.add(archivedAudit);
             }
             archivedOrder.setAuditItems(archivedAudits);

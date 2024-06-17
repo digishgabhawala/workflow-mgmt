@@ -140,16 +140,16 @@ async function handleChangePassword(event) {
         });
 
         if (response.ok) {
-            alert('Password changed successfully.');
+            showAlertModal('Success', 'Password changed successfully.');
             const changePasswordModal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
             changePasswordModal.hide();
         } else {
             const errorData = await response.json();
-            alert(`Failed to change password: ${errorData.message}`);
+            showAlertModal('Error', `Failed to change password: ${errorData.message}`);
         }
     } catch (error) {
         console.error('Error changing password:', error);
-        alert('An error occurred while changing password.');
+        showAlertModal('Error', 'An error occurred while changing password.');
     }
 }
 
@@ -173,11 +173,11 @@ async function handleExport() {
             a.click();
             a.remove();
         } else {
-            alert('Failed to export database.');
+            showAlertModal('Error', 'Failed to export database.');
         }
     } catch (error) {
         console.error('Error exporting database:', error);
-        alert('An error occurred while exporting the database.');
+        showAlertModal('Error', 'An error occurred while exporting the database.');
     }
 }
 
@@ -206,13 +206,13 @@ async function handleImport(event) {
         });
 
         if (response.ok) {
-            alert('Database imported successfully.');
+            showAlertModal('Success', 'Database imported successfully.');
         } else {
-            alert('Failed to import database.');
+            showAlertModal('Error', 'Failed to import database.');
         }
     } catch (error) {
         console.error('Error importing database:', error);
-        alert('An error occurred while importing the database.');
+        showAlertModal('Error', 'An error occurred while importing the database.');
     }
 }
 
@@ -244,6 +244,7 @@ async function loadUser() {
         return user;
     } catch (error) {
         console.error('Error loading user details:', error);
+        showAlertModal('Error', 'Failed to load user details.');
         throw error;
     }
 }
@@ -261,9 +262,10 @@ async function handleLogout() {
         });
 
         if (response.ok) {
+            showAlertModal('Logout', 'Successfully logged out.');
             window.location.href = '/myorders.html'; // Redirect to login page after logout
         } else {
-            throw new Error('Failed to logout');
+            showAlertModal('Error', 'Failed to logout.');
         }
     } catch (error) {
         console.error('Error logging out:', error);
@@ -283,4 +285,52 @@ async function fetchCsrfToken() {
         console.error('Error fetching CSRF token:', error);
         throw new Error('Failed to fetch CSRF token');
     }
+}
+
+// Function to create a generic alert modal
+function createAlertModal(title, message) {
+    const modalHTML = `
+        <div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="alertModalLabel">${title}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>${message}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    return modalHTML;
+}
+
+// Function to show the alert modal
+function showAlertModal(title, message,onCloseCallback) {
+    // Remove any existing alert modal first
+    const existingModal = document.getElementById('alertModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Create new alert modal
+    const modalHTML = createAlertModal(title, message);
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Show the modal
+    const alertModal = new bootstrap.Modal(document.getElementById('alertModal'));
+    alertModal.show();
+
+    // Add event listener for modal close
+    const modalElement = document.getElementById('alertModal');
+    modalElement.addEventListener('hidden.bs.modal', () => {
+        if (onCloseCallback) {
+            onCloseCallback();
+        }
+    });
 }

@@ -26,7 +26,19 @@ public class ArchivedOrder {
     @Column(updatable = false)
     private LocalDateTime archivedAt = LocalDateTime.now();
 
+    @Column(name = "timestamp")
+    private LocalDateTime creationDate; // New field for timestamp
+
     // Getters and setters
+
+
+    public LocalDateTime getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(LocalDateTime creationDate) {
+        this.creationDate = creationDate;
+    }
 
     public Long getId() {
         return id;

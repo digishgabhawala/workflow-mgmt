@@ -46,36 +46,6 @@ function toggleTransitionForm(jobId) {
     form.classList.toggle('d-none');
 }
 
-async function handleAddTransition(event, jobId) {
-    event.preventDefault();
-    const fromStateId = document.getElementById(`fromState-${jobId}`).value;
-    const toStateId = document.getElementById(`toState-${jobId}`).value;
-    const csrfToken = await fetchCsrfToken();
-    const response = await addJobTransition(jobId, fromStateId, toStateId, csrfToken);
-    if (response.id) {
-        loadJobs();
-        document.getElementById(`transitionForm-${jobId}`).classList.add('d-none');
-    } else if(response.message){
-        showAlertModal('Error', response.message);
-    } else {
-        showAlertModal('Error', 'Failed to add transition');
-    }
-}
-
-async function addJobTransition(jobId, fromStateId, toStateId, csrfToken) {
-    const response = await fetch(`/jobs/${jobId}/transitions`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        },
-        body: JSON.stringify({ fromStateId, toStateId })
-    });
-    if(!response.ok){
-
-    }
-    return response.json();
-}
 
 window.onload = async function() {
     await loadJobs();
@@ -381,58 +351,6 @@ function generateTransitionsList(job, jobStates) {
     }).join('');
 }
 
-function createJobRow(job, jobStateOptions, jobTransitionOptions, jobStatesList, transitionsList) {
-    const addJobStateForm = `
-        <button class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('addJobStateForm-${job.id}').classList.toggle('d-none')">
-            <i class="fas fa-plus"></i> Add Job State
-        </button>
-        <form id="addJobStateForm-${job.id}" class="form-inline mt-2 d-none" onsubmit="handleAddJobState(event, ${job.id})">
-            <select id="jobStateSelect-${job.id}" class="form-control mr-2 jobStateDropdown">${jobStateOptions}</select>
-            <button type="submit" class="btn btn-primary btn-sm">Add</button>
-        </form>
-    `;
-
-    const addTransitionForm = `
-        <button class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('transitionForm-${job.id}').classList.toggle('d-none')">
-            <i class="fas fa-plus"></i> Add Transition
-        </button>
-        <form id="transitionForm-${job.id}" class="d-none mt-2" onsubmit="handleAddTransition(event, ${job.id})">
-            <div class="form-group">
-                <label for="fromState-${job.id}">From State:</label>
-                <select id="fromState-${job.id}" class="form-control">${jobTransitionOptions}</select>
-            </div>
-            <div class="form-group">
-                <label for="toState-${job.id}">To State:</label>
-                <select id="toState-${job.id}" class="form-control">${jobTransitionOptions}</select>
-            </div>
-            <button type="submit" class="btn btn-primary">Add Transition</button>
-        </form>
-    `;
-
-    const row = document.createElement('tr');
-    row.innerHTML = `
-        <td>${job.id}</td>
-        <td>${job.name}</td>
-        <td>
-            <ul class="list-group">
-                <li class="list-group-item">
-                    ${addJobStateForm}
-                </li>
-                ${jobStatesList}
-            </ul>
-        </td>
-        <td>
-            <ul class="list-group">
-                <li class="list-group-item">
-                    ${addTransitionForm}
-                </li>
-                ${transitionsList}
-            </ul>
-        </td>
-    `;
-    return row;
-}
-
 async function handleSubmitJob(event) {
     event.preventDefault();
 
@@ -637,4 +555,91 @@ async function loadJobStates() {
 function toggleCardBody(headerElement) {
     const cardBody = headerElement.nextElementSibling;
     cardBody.classList.toggle('d-none');
+}
+
+
+
+async function addJobTransition(jobId, fromStateId, toStateId, csrfToken) {
+    try {
+        const response = await fetch(`/jobs/${jobId}/transitions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({ fromStateId, toStateId })
+        });
+
+        if (!response.ok) {
+            // If the response is not OK, throw an error with the status text
+            throw new Error(response.statusText);
+        }
+
+        return response.json();
+    } catch (error) {
+        console.error('Error adding job transition:', error);
+        return { message: 'Failed to add transition due to a network error.' };
+    }
+}
+
+function hasLoop(job, fromStateId, toStateId) {
+    let visited = new Set();
+    let queue = [toStateId];
+
+    while (queue.length > 0) {
+        let currentState = queue.shift();
+
+        // If we find the fromStateId in the reachable states, a loop exists
+        if (currentState == fromStateId) {
+            return true;
+        }
+
+        // Mark the current state as visited
+        visited.add(currentState);
+
+        // Get indexes where fromJobStateIds is the current state
+        job.fromJobStateIds.forEach((state, index) => {
+            console.log(state,currentState)
+            if (state == currentState && !visited.has(job.toJobStateIds[index])) {
+                queue.push(job.toJobStateIds[index]);
+            }
+        });
+    }
+
+    return false;
+}
+
+async function handleAddTransition(event, jobId) {
+    event.preventDefault();
+    const fromStateId = document.getElementById(`fromState-${jobId}`).value;
+    const toStateId = document.getElementById(`toState-${jobId}`).value;
+    const csrfToken = await fetchCsrfToken();
+
+    // Fetch job details (assuming a function fetchJobDetails exists)
+    const job = await fetchJobDetails(jobId);
+
+    if (hasLoop(job, fromStateId, toStateId)) {
+        showAlertModal('Error', 'Adding this transition will create a loop');
+        return;
+    }
+
+    const response = await addJobTransition(jobId, fromStateId, toStateId, csrfToken);
+
+    if (response.id) {
+        showAlertModal('Success', 'Transition added successfully', () => {
+            loadJobs();
+            document.getElementById(`transitionForm-${jobId}`).classList.add('d-none');
+        });
+    } else if (response.message) {
+        showAlertModal('Error', response.message);
+    } else {
+        showAlertModal('Error', 'Failed to add transition');
+    }
+}
+
+async function fetchJobDetails(jobId) {
+    const response = await fetch(`/jobs/${jobId}`);
+    const data = await response.json();
+    return data;
+
 }

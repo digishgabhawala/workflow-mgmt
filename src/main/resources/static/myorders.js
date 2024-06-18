@@ -27,7 +27,7 @@ async function loadMyOrders(csrfToken) {
         currentOrdersCards.innerHTML = '';
 
         myOrders.forEach(order => {
-            addOrderCard(order, currentOrdersCards, 'Mark as Done', markAsDone, csrfToken);
+            addOrderCard(order, currentOrdersCards, 'myOrders', csrfToken);
         });
     } catch (error) {
         console.error('Error loading my orders:', error);
@@ -53,14 +53,14 @@ async function loadAvailableOrders(csrfToken) {
         availableOrdersCards.innerHTML = '';
 
         availableOrders.forEach(order => {
-            addOrderCard(order, availableOrdersCards, 'Assign to Me', assignOrderToMe, csrfToken);
+            addOrderCard(order, availableOrdersCards, 'availableOrders', csrfToken);
         });
     } catch (error) {
         console.error('Error loading available orders:', error);
     }
 }
 
-function addOrderCard(order, container, buttonText, actionFunction, csrfToken) {
+function addOrderCard(order, container, type, csrfToken) {
     const card = document.createElement('div');
     card.classList.add('col');
     card.innerHTML = `
@@ -88,14 +88,16 @@ function addOrderCard(order, container, buttonText, actionFunction, csrfToken) {
                 <p><strong>Amount:</strong> ${order.amount ? order.amount : 'N/A'}</p>
                 <p><strong>Note:</strong> ${order.note ? order.note : 'N/A'}</p>
                 <p><strong>Assigned to:</strong> ${order.currentUser ? order.currentUser.username : 'N/A'}</p>
-                <button class="btn btn-primary">${buttonText}</button>
+                <div class="action-buttons">
+                    <!-- Action buttons will be inserted here -->
+                </div>
             </div>
         </div>
     `;
 
     const cardHeader = card.querySelector('.card-header');
     const cardBody = card.querySelector('.card-body');
-    const actionButton = card.querySelector('.btn');
+    const actionButtonsContainer = card.querySelector('.action-buttons');
 
     cardHeader.addEventListener('click', () => {
         cardBody.classList.toggle('d-none');
@@ -103,17 +105,41 @@ function addOrderCard(order, container, buttonText, actionFunction, csrfToken) {
         icon.classList.toggle('fa-chevron-up');
     });
 
-    actionButton.addEventListener('click', () => actionFunction(order, csrfToken));
+    if (type === 'availableOrders') {
+        const assignButton = document.createElement('button');
+        assignButton.classList.add('btn', 'btn-primary', 'mr-2');
+        assignButton.textContent = 'Assign to Me';
+        assignButton.addEventListener('click', () => assignOrderToMe(order, csrfToken));
+        const para = document.createElement('p');
+        element = actionButtonsContainer.appendChild(para);
+        element.appendChild(assignButton);
+    } else if (type === 'myOrders') {
+        // Get possible next states for the current state
+        const currentStateId = order.currentState.id;
+        order.orderType.fromJobStateIds.forEach((stateId, index) => {
+            if (stateId === currentStateId) {
+                const nextStateId = order.orderType.toJobStateIds[index];
+                const nextState = order.orderType.jobStates.find(state => state.id === nextStateId);
+                const nextStateName = nextState ? nextState.name : 'Unknown';
+
+                const actionButton = document.createElement('button');
+                actionButton.classList.add('btn', 'btn-primary', 'mr-2');
+                actionButton.textContent = `Move to ${nextStateName}`;
+                actionButton.addEventListener('click', () => moveToState(order, nextStateId, csrfToken));
+
+                const para = document.createElement('p');
+                element = actionButtonsContainer.appendChild(para);
+                element.appendChild(actionButton);
+
+            }
+        });
+    }
 
     container.appendChild(card);
 }
 
-async function markAsDone(order, csrfToken) {
+async function moveToState(order, nextStateId, csrfToken) {
     try {
-        const currentStateId = order.currentState.id;
-        const currentStateIndex = order.orderType.fromJobStateIds.indexOf(currentStateId);
-        const nextStateId = order.orderType.toJobStateIds[currentStateIndex];
-
         const response = await fetch(`/orders/${order.id}/moveToState?nextStateId=${nextStateId}`, {
             method: 'POST',
             headers: {
@@ -129,7 +155,7 @@ async function markAsDone(order, csrfToken) {
         await loadMyOrders(csrfToken);
         await loadAvailableOrders(csrfToken);
     } catch (error) {
-        console.error('Error marking order as done:', error);
+        console.error('Error moving order to next state:', error);
     }
 }
 

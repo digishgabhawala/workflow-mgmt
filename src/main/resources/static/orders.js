@@ -12,7 +12,7 @@ async function initializeOrderForm() {
         await loadOrders(); // Load existing orders on page load
     } catch (error) {
         console.error('Error initializing order form:', error);
-        showAlertModal('Error','Failed to initialize order form. Please try again.')
+        showAlertModal('Error', 'Failed to initialize order form. Please try again.')
     }
 }
 
@@ -31,7 +31,7 @@ async function populateOrderTypeDropdown() {
         });
     } catch (error) {
         console.error('Error populating order type dropdown:', error);
-        showAlertModal('Error','Failed to populate order type dropdown. Please try again.');
+        showAlertModal('Error', 'Failed to populate order type dropdown. Please try again.');
     }
 }
 
@@ -121,24 +121,24 @@ async function handleSubmitOrder(event) {
     try {
         const createdOrder = await createOrder(order);
         if (createdOrder.id) {
-
             showAlertModal('Success', 'Order created successfully!', () => {
-                    window.location.reload();
-                });
-
+                window.location.reload();
+            });
         } else {
-            showAlertModal('Error','Failed to create order. Please try again.');
+            showAlertModal('Error', 'Failed to create order. Please try again.');
         }
     } catch (error) {
         console.error('Error creating order:', error);
-        showAlertModal('Error','Failed to create order. Please try again.');
+        showAlertModal('Error', 'Failed to create order. Please try again.');
     } finally {
         isSubmitting = false; // Reset the submission flag
     }
 }
+
 async function loadOrders() {
     try {
-        const orders = await fetchOrders();
+        let orders = await fetchOrders();
+        orders = sortOrders(orders);
         orders.forEach(order => {
             addOrderCard(order); // Add each order as a collapsible card
         });
@@ -204,8 +204,6 @@ function addOrderCard(order) {
     orderCardsContainer.appendChild(card);
 }
 
-
-
 // Function to fetch orders from the backend
 async function fetchOrders() {
     try {
@@ -219,6 +217,20 @@ async function fetchOrders() {
         console.error('Error fetching orders:', error);
         throw new Error('Failed to fetch orders');
     }
+}
+
+// Function to sort orders based on criteria
+function sortOrders(orders) {
+    // First, sort by order.currentUser (null values first) and then by order.priority
+    return orders.sort((a, b) => {
+        // Sorting by currentUser (null first)
+        if (!a.currentUser && b.currentUser) return -1;
+        if (a.currentUser && !b.currentUser) return 1;
+        // If both have the same currentUser status, then sort by priority
+        const priorityA = a.priority || 0;
+        const priorityB = b.priority || 0;
+        return priorityA - priorityB;
+    });
 }
 
 // Function to format timestamp into 'DD-MM-YY HH:MM'
@@ -290,7 +302,6 @@ function getPendingStates(order) {
     return pendingStates.join(' -> ');
 }
 
-
 // Function to delete an order
 async function deleteOrder(orderId) {
     const csrfToken = await fetchCsrfToken();
@@ -304,13 +315,12 @@ async function deleteOrder(orderId) {
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
-        showAlertModal('Success','Order deleted successfully!',() => {
-                                                                       window.location.reload();
-                                                                   });
-
+        showAlertModal('Success', 'Order deleted successfully!', () => {
+            window.location.reload();
+        });
     } catch (error) {
         console.error('Error deleting order:', error);
-        showAlertModal('Error','Failed to delete order. Please try again.');
+        showAlertModal('Error', 'Failed to delete order. Please try again.');
     }
 }
 

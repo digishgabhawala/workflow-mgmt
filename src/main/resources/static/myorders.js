@@ -22,7 +22,9 @@ async function loadMyOrders(csrfToken) {
             throw new Error('Failed to fetch my orders');
         }
 
-        const myOrders = await response.json();
+        let myOrders = await response.json();
+        myOrders = sortOrdersByPriority(myOrders);
+
         const currentOrdersCards = document.getElementById('currentOrdersCards');
         currentOrdersCards.innerHTML = '';
 
@@ -48,7 +50,9 @@ async function loadAvailableOrders(csrfToken) {
             throw new Error('Failed to fetch available orders');
         }
 
-        const availableOrders = await response.json();
+        let availableOrders = await response.json();
+        availableOrders = sortOrdersByPriority(availableOrders);
+
         const availableOrdersCards = document.getElementById('availableOrdersCards');
         availableOrdersCards.innerHTML = '';
 
@@ -58,6 +62,11 @@ async function loadAvailableOrders(csrfToken) {
     } catch (error) {
         console.error('Error loading available orders:', error);
     }
+}
+
+function sortOrdersByPriority(orders) {
+    return orders.sort((a, b) => { return a.priority - b.priority;}
+    );
 }
 
 function addOrderCard(order, container, type, csrfToken) {
@@ -88,7 +97,7 @@ function addOrderCard(order, container, type, csrfToken) {
                 <p><strong>Amount:</strong> ${order.amount ? order.amount : 'N/A'}</p>
                 <p><strong>Note:</strong> ${order.note ? order.note : 'N/A'}</p>
                 <p><strong>Assigned to:</strong> ${order.currentUser ? order.currentUser.username : 'N/A'}</p>
-                <div class="action-buttons">
+                <div class="action-buttons mt-3">
                     <!-- Action buttons will be inserted here -->
                 </div>
             </div>
@@ -107,12 +116,10 @@ function addOrderCard(order, container, type, csrfToken) {
 
     if (type === 'availableOrders') {
         const assignButton = document.createElement('button');
-        assignButton.classList.add('btn', 'btn-primary', 'mr-2');
+        assignButton.classList.add('btn', 'btn-primary', 'mr-2', 'mb-2');
         assignButton.textContent = 'Assign to Me';
         assignButton.addEventListener('click', () => assignOrderToMe(order, csrfToken));
-        const para = document.createElement('p');
-        element = actionButtonsContainer.appendChild(para);
-        element.appendChild(assignButton);
+        actionButtonsContainer.appendChild(assignButton);
     } else if (type === 'myOrders') {
         // Get possible next states for the current state
         const currentStateId = order.currentState.id;
@@ -123,14 +130,11 @@ function addOrderCard(order, container, type, csrfToken) {
                 const nextStateName = nextState ? nextState.name : 'Unknown';
 
                 const actionButton = document.createElement('button');
-                actionButton.classList.add('btn', 'btn-primary', 'mr-2');
+                actionButton.classList.add('btn', 'btn-primary', 'mr-2', 'mb-2');
                 actionButton.textContent = `Move to ${nextStateName}`;
                 actionButton.addEventListener('click', () => moveToState(order, nextStateId, csrfToken));
 
-                const para = document.createElement('p');
-                element = actionButtonsContainer.appendChild(para);
-                element.appendChild(actionButton);
-
+                actionButtonsContainer.appendChild(actionButton);
             }
         });
     }

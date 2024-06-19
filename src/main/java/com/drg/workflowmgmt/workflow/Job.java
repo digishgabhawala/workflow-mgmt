@@ -11,6 +11,14 @@ public class Job {
     private Long id;
 
     private String name;
+    private boolean archived = false;
+    public boolean isArchived() {
+        return archived;
+    }
+
+    public void setArchived(boolean archived) {
+        this.archived = archived;
+    }
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

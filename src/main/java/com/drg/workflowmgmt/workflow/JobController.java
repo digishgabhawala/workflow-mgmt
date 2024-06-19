@@ -103,6 +103,21 @@ public class JobController {
         }
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteJob(@PathVariable Long id) {
+        try {
+            boolean deleted = jobService.deleteJob(id);
+            if (deleted) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            } else {
+                return new ResponseEntity<>(new ErrorResponse("Job has orders and is archived instead of deleted", HttpStatus.BAD_REQUEST), HttpStatus.BAD_REQUEST);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR));
+        }
+    }
+
+
     public static class JobRequest {
         private String name;
         private JobState startState;

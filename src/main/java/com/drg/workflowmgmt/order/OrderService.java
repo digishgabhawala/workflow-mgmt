@@ -51,8 +51,11 @@ public class OrderService {
         if (order.getOrderType() == null) {
             throw new IllegalArgumentException("Order type and start state are required");
         }
-
         Job orderTypeJob = jobService.getJob(order.getOrderType().getId());
+        if (orderTypeJob.isArchived()) {
+            throw new IllegalArgumentException("Cannot create order for archived job type");
+        }
+
         order.setOrderType(orderTypeJob);
         order.setCurrentState(order.getOrderType().getStartState());
 
@@ -201,5 +204,9 @@ public class OrderService {
         List<Audit> audits = order.getAuditItems();
         auditRepository.deleteAll(audits);
         orderRepository.delete(order);
+    }
+
+    public boolean existsByOrderType(Job job) {
+        return  orderRepository.existsByOrderType(job);
     }
 }

@@ -1,6 +1,7 @@
 package com.drg.workflowmgmt.order;
 
 import com.drg.workflowmgmt.usermgmt.User;
+import com.drg.workflowmgmt.workflow.Job;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,4 +12,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByCurrentUser(User currentUser);
     @Query("SELECT o FROM Order o WHERE o.currentUser IS NULL AND o.currentState.id IN :stateIds")
     List<Order> findUnassignedOrdersByStateIds(@Param("stateIds") List<Long> stateIds);
+
+    boolean existsByOrderType(Job job);
+
 }

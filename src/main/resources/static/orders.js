@@ -23,7 +23,9 @@ async function populateOrderTypeDropdown() {
         const orderTypeDropdown = document.getElementById('orderType');
         orderTypeDropdown.innerHTML = '';
 
-        orderTypes.forEach(orderType => {
+        const activeOrderTypes = orderTypes.filter(orderType => !orderType.archived);
+
+        activeOrderTypes.forEach(orderType => {
             const option = document.createElement('option');
             option.value = orderType.id;
             option.textContent = orderType.name;

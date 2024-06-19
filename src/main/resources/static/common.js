@@ -340,3 +340,148 @@ function showAlertModal(title, message, onCloseCallback) {
         }
     });
 }
+
+function createCopyJobModal() {
+    // Create a Bootstrap Modal dynamically
+    const modalContent = `
+        <div class="modal fade" id="copyJobModal" tabindex="-1" role="dialog" aria-labelledby="copyJobModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="copyJobModalLabel">Enter a new name for the copied job:</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" id="newJobNameInput" class="form-control">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="confirmCopyJobBtn">Copy Job</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Append modal HTML to the body
+    document.body.insertAdjacentHTML('beforeend', modalContent);
+
+    // Show the modal
+    $('#copyJobModal').modal('show');
+
+    // Return a promise that resolves with the entered job name or rejects if canceled
+    return new Promise((resolve, reject) => {
+        $('#confirmCopyJobBtn').on('click', function() {
+            const newJobName = document.getElementById('newJobNameInput').value.trim();
+            if (newJobName) {
+                // If a valid job name is entered, resolve the promise with the name
+                $('#copyJobModal').modal('hide');
+                resolve(newJobName);
+            } else {
+                // If no name is entered, reject the promise
+                reject(new Error('No job name entered'));
+            }
+        });
+
+        // Handle modal dismissal (e.g., if the user clicks outside the modal or presses ESC)
+        $('#copyJobModal').on('hidden.bs.modal', function() {
+            reject(new Error('Modal closed without entering job name'));
+        });
+    });
+}
+
+function createModal(title, inputLabel, confirmBtnLabel, cancelBtnLabel) {
+    // Create a unique ID for the modal to avoid conflicts
+    const modalId = `modal-${Math.random().toString(36).substr(2, 9)}`;
+
+    // Modal content HTML
+    const modalContent = `
+        <div class="modal fade" id="${modalId}" tabindex="-1" role="dialog" aria-labelledby="${modalId}Label" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="${modalId}Label">${title}</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" id="${modalId}Input" class="form-control" placeholder="${inputLabel}">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">${cancelBtnLabel}</button>
+                        <button type="button" class="btn btn-primary" id="${modalId}ConfirmBtn">${confirmBtnLabel}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Append modal HTML to the body
+    document.body.insertAdjacentHTML('beforeend', modalContent);
+
+    // Show the modal
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('show');
+        modal.style.display = 'block';
+    }
+
+    // Return a promise that resolves with user input or rejects if canceled
+    return new Promise((resolve, reject) => {
+        const confirmBtn = document.getElementById(`${modalId}ConfirmBtn`);
+        const modalInput = document.getElementById(`${modalId}Input`);
+
+        if (!confirmBtn || !modalInput) {
+            reject(new Error('Modal elements not found'));
+            return;
+        }
+
+        const closeModal = () => {
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+            cleanup();
+        };
+
+        const confirmHandler = () => {
+            const userInput = modalInput.value.trim();
+            resolve(userInput); // Resolve with user input
+            closeModal();
+        };
+
+        const cancelHandler = () => {
+            closeModal();
+            reject(new Error('Modal closed without user input'));
+        };
+
+        // Attach event listeners
+        confirmBtn.addEventListener('click', confirmHandler);
+        modal.addEventListener('hidden.bs.modal', cancelHandler);
+
+        // Cleanup: Remove event listeners and modal from DOM after use
+        const cleanup = () => {
+            confirmBtn.removeEventListener('click', confirmHandler);
+            modal.removeEventListener('hidden.bs.modal', cancelHandler);
+            modal.remove();
+        };
+
+        // Close modal on document click outside of modal
+        document.addEventListener('click', function(event){
+            if (!modal.contains(event.target) && event.target !== modal) {
+                closeModal();
+            }
+        });
+
+        // Handle pressing Esc
+        document.addEventListener('keydown', function(event){
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    });
+}
+
+
+

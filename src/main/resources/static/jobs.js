@@ -317,15 +317,18 @@ function generateJobStatesList(job) {
     const startStateId = job.startState.id;
     const endStateId = job.endState.id;
 
+    // Check if job is archived
+    const isArchived = job.archived;
+
     return job.jobStates.map(state => {
         let removeButton = ''; // Initialize removeButton variable
 
-        // Check if the state is the start or end state
-        if (state.id === startStateId || state.id === endStateId) {
-            // Disable the remove button if it's the start or end state
+        // Check if the state is the start or end state or if job is archived
+        if (state.id === startStateId || state.id === endStateId || isArchived) {
+            // Disable the remove button if it's the start or end state or if job is archived
             removeButton = `<button class="btn btn-sm btn-danger ml-2" disabled>Remove</button>`;
         } else {
-            // Render the remove button normally if it's not the start or end state
+            // Render the remove button normally if it's not the start or end state and job is not archived
             removeButton = `<button class="btn btn-sm btn-danger ml-2" onclick="handleRemoveJobState(event, ${job.id}, ${state.id})">Remove</button>`;
         }
 
@@ -338,14 +341,24 @@ function generateJobStatesList(job) {
     }).join('');
 }
 
+
 function generateTransitionsList(job, jobStates) {
     return job.fromJobStateIds.map((fromStateId, index) => {
         const fromState = jobStates.find(state => state.id === fromStateId);
         const toState = jobStates.find(state => state.id === job.toJobStateIds[index]);
+
+        // Check if job is archived
+        const isArchived = job.archived;
+
+        // Conditionally render remove button
+        const removeButton = isArchived
+            ? `<button class="btn btn-sm btn-danger ml-2" disabled>Remove</button>`
+            : `<button class="btn btn-sm btn-danger ml-2" onclick="handleRemoveTransition(event, ${job.id}, ${fromStateId}, ${job.toJobStateIds[index]})">Remove</button>`;
+
         return fromState && toState ? `
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 ${fromState.name} -> ${toState.name}
-                <button class="btn btn-sm btn-danger ml-2" onclick="handleRemoveTransition(event, ${job.id}, ${fromStateId}, ${job.toJobStateIds[index]})">Remove</button>
+                ${removeButton}
             </li>
         ` : '';
     }).join('');
@@ -411,37 +424,75 @@ function toggleJobsCards() {
     }
 }
 
+async function handleDeleteJob(event, jobId) {
+    event.preventDefault();
+    const csrfToken = await fetchCsrfToken();
+    const response = await fetch(`/jobs/${jobId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        }
+    });
+
+    if (response.ok) {
+        loadJobs();
+    } else {
+        const responseData = await response.json();
+        showAlertModal('Error', responseData.message || 'Failed to delete job');
+    }
+}
+
 function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList, transitionsList) {
-    const addJobStateForm = `
-        <button class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('addJobStateForm-${job.id}').classList.toggle('d-none')">
-            <i class="fas fa-plus"></i> Add Job State
+    const addJobStateForm = job.archived
+        ? ''
+        : `
+          <button class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('addJobStateForm-${job.id}').classList.toggle('d-none')">
+              <i class="fas fa-plus"></i> Add Job State
+          </button>
+          <form id="addJobStateForm-${job.id}" class="form-inline mt-2 d-none" onsubmit="handleAddJobState(event, ${job.id})">
+              <select id="jobStateSelect-${job.id}" class="form-control mr-2 jobStateDropdown">${jobStateOptions}</select>
+              <button type="submit" class="btn btn-primary btn-sm">Add</button>
+          </form>
+        `;
+
+    const copyButton = `
+        <button class="btn btn-sm btn-secondary ml-2" onclick="copyJob(${job.id})">
+            <i class="fas fa-copy"></i> Copy
         </button>
-        <form id="addJobStateForm-${job.id}" class="form-inline mt-2 d-none" onsubmit="handleAddJobState(event, ${job.id})">
-            <select id="jobStateSelect-${job.id}" class="form-control mr-2 jobStateDropdown">${jobStateOptions}</select>
-            <button type="submit" class="btn btn-primary btn-sm">Add</button>
-        </form>
     `;
 
-    const addTransitionForm = `
-        <button class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('transitionForm-${job.id}').classList.toggle('d-none')">
-            <i class="fas fa-plus"></i> Add Transition
-        </button>
-        <form id="transitionForm-${job.id}" class="d-none mt-2" onsubmit="handleAddTransition(event, ${job.id})">
-            <div class="form-group">
-                <label for="fromState-${job.id}">From State:</label>
-                <select id="fromState-${job.id}" class="form-control">${jobTransitionOptions}</select>
-            </div>
-            <div class="form-group">
-                <label for="toState-${job.id}">To State:</label>
-                <select id="toState-${job.id}" class="form-control">${jobTransitionOptions}</select>
-            </div>
-            <button type="submit" class="btn btn-primary">Add Transition</button>
-        </form>
-    `;
+    const deleteButton = job.archived
+        ? ''  // Empty string to hide delete button if archived
+        : `
+          <button class="btn btn-sm btn-danger ml-2" onclick="handleDeleteJob(event, ${job.id})">
+              <i class="fas fa-trash"></i> Delete
+          </button>
+        `;
+
+    const addTransitionForm = job.archived
+        ? ''
+        : `
+          <button class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('transitionForm-${job.id}').classList.toggle('d-none')">
+              <i class="fas fa-plus"></i> Add Transition
+          </button>
+          <form id="transitionForm-${job.id}" class="d-none mt-2" onsubmit="handleAddTransition(event, ${job.id})">
+              <div class="form-group">
+                  <label for="fromState-${job.id}">From State:</label>
+                  <select id="fromState-${job.id}" class="form-control">${jobTransitionOptions}</select>
+              </div>
+              <div class="form-group">
+                  <label for="toState-${job.id}">To State:</label>
+                  <select id="toState-${job.id}" class="form-control">${jobTransitionOptions}</select>
+              </div>
+              <button type="submit" class="btn btn-primary">Add Transition</button>
+          </form>
+        `;
 
     const jobStatesContent = `
         <div id="jobStates-${job.id}">
             <h6>Job States</h6>
+            <h6>${copyButton} ${deleteButton}</h6>
             <ul class="list-group mb-3">
                 <li class="list-group-item">
                     ${addJobStateForm}
@@ -469,7 +520,9 @@ function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title m-0">${job.name}</h5>
-                <i class="fas fa-chevron-down"></i>
+                <div class="ml-auto d-flex align-items-center">
+                    <i class="fas fa-chevron-down ml-2"></i>
+                </div>
             </div>
             <div class="card-body d-none">
                 ${jobStatesContent}
@@ -489,6 +542,10 @@ function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList
 
     return card;
 }
+
+
+
+
 async function loadJobStates() {
     const jobStates = await fetchJobStates();
     const jobStatesCards = document.getElementById('jobStatesCards');
@@ -643,3 +700,58 @@ async function fetchJobDetails(jobId) {
     return data;
 
 }
+
+async function copyJob(jobId) {
+    try {
+        // Fetch details of the job to copy
+        const job = await fetchJobDetails(jobId);
+
+        // Show the modal and wait for user input
+        const newJobName = await createModal(
+            'Enter a new name for the copied job:', // Modal title
+            'New job name',                        // Input label
+            'Copy Job',                            // Confirm button label
+            'Cancel'                               // Cancel button label
+        );
+
+        // If the user canceled or didn't provide a name, return
+        if (!newJobName) return;
+
+        // Create a new job with minimum attributes
+        const csrfToken = await fetchCsrfToken();
+        const newJob = {
+            name: newJobName,
+            startState: { id: job.startState.id },
+            endState: { id: job.endState.id }
+        };
+
+        // Step 1: Create the new job
+        const createdJob = await createJob(newJob, csrfToken);
+        if (!createdJob.id) {
+            showAlertModal('Error', 'Failed to create copied job');
+            return;
+        }
+
+        // Step 2: Add job states to the new job
+        for (const state of job.jobStates) {
+            if (state.id !== job.startState.id && state.id !== job.endState.id) {
+                await addJobStateToJob(createdJob.id, state.id, csrfToken);
+            }
+        }
+
+        // Step 3: Add transitions between job states of the new job
+        for (let i = 0; i < job.fromJobStateIds.length; i++) {
+            const fromStateId = job.fromJobStateIds[i];
+            const toStateId = job.toJobStateIds[i];
+            await addJobTransition(createdJob.id, fromStateId, toStateId, csrfToken);
+        }
+
+        // Reload jobs after copying is completed
+        loadJobs();
+    } catch (error) {
+        console.error('Error copying job:', error);
+        showAlertModal('Error', 'Failed to copy job. Please try again.');
+    }
+}
+
+

@@ -1,5 +1,7 @@
 package com.drg.workflowmgmt.workflow;
 
+import com.drg.workflowmgmt.order.OrderRepository;
+import com.drg.workflowmgmt.order.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -141,5 +143,29 @@ public class JobService {
 
     public JobState getJobState(Long jobStateId) {
         return jobStateRepository.findById(jobStateId).orElse(null);
+    }
+
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    public boolean deleteJob(Long id) {
+        Job job = jobRepository.findById(id).orElse(null);
+        if (job == null) {
+            return false;
+        }
+
+        // Check for orders associated with this job
+        boolean hasOrders = orderRepository.existsByOrderType(job);
+        if (hasOrders) {
+            // Archive the job if there are associated orders
+            job.setArchived(true);
+            jobRepository.save(job);
+            return false;
+        } else {
+            // Delete the job if there are no associated orders
+            jobRepository.deleteById(id);
+            return true;
+        }
     }
 }

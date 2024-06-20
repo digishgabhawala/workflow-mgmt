@@ -49,7 +49,7 @@ function toggleTransitionForm(jobId) {
 
 window.onload = async function() {
     await loadJobs();
-    await loadJobStates();
+//    await loadJobStates();
 
     // Set up event listener for each job name header
 //    const jobNameHeaders = document.querySelectorAll('.job-name-header');
@@ -239,9 +239,7 @@ async function removeRoleFromJobState(jobStateId, roleName, csrfToken) {
 }
 
 // Ensure the role dropdown is populated with roles not already assigned to the job state
-async function populateRoleDropdown(jobStateId) {
-    const roles = await fetchRoles();
-    const jobState = await fetchJobState(jobStateId);
+async function populateRoleDropdown(jobStateId,roles,jobState) {
     const dropdown = document.getElementById(`roleDropdown-${jobStateId}`);
     dropdown.innerHTML = '';
 
@@ -275,16 +273,15 @@ async function loadJobs() {
         jobsCards.appendChild(card);
     });
 
-    loadJobStates(); // Ensure job states are loaded after jobs
-    populateJobStateDropdowns(); // Populate dropdowns for start and end states
+    loadJobStates(jobStates); // Ensure job states are loaded after jobs
+    populateJobStateDropdowns(jobStates); // Populate dropdowns for start and end states
 }
 
 
-function populateJobStateDropdowns() {
+function populateJobStateDropdowns(jobStates) {
     const jobStateSelectElements = ['startState', 'endState'];
     jobStateSelectElements.forEach(async (elementId) => {
         const selectElement = document.getElementById(elementId);
-        const jobStates = await fetchJobStates();
         selectElement.innerHTML = generateJobStateOptions(jobStates);
     });
 }
@@ -546,12 +543,23 @@ function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList
 
 
 
-async function loadJobStates() {
-    const jobStates = await fetchJobStates();
+async function loadJobStates(jobStatesData) {
+    let jobStates;
+    if(jobStatesData){
+         jobStates = jobStatesData;
+    }
+    else{
+        jobStates = await fetchJobStates();
+    }
     const jobStatesCards = document.getElementById('jobStatesCards');
     jobStatesCards.innerHTML = '';
 
+    const roles = await fetchRoles();
+
     jobStates.forEach(jobState => {
+//        jobStates
+//        const jobState = await fetchJobState(jobState.id);
+
         const rolesList = jobState.roles ? jobState.roles.map(role => `
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 ${role}
@@ -599,7 +607,8 @@ async function loadJobStates() {
         jobStatesCards.appendChild(card);
 
         // Populate the role dropdown after adding the card
-        populateRoleDropdown(jobState.id);
+
+        populateRoleDropdown(jobState.id,roles,jobState);
 
         // Initialize timepicker
         document.getElementById(`timeInput-${jobState.id}`).addEventListener('change', function() {

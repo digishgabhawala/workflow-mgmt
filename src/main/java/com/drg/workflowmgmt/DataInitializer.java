@@ -42,10 +42,19 @@ public class DataInitializer {
     @Transactional
     public ApplicationRunner initializer(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         return args -> {
-            initializeData(userRepository, roleRepository, passwordEncoder);
-            JobsInitializer.initJobs(jobService, userService);
-            initOrders();
-            initTestOrders();
+            try{
+                if( userRepository.count() == 0){
+                    initializeData(userRepository, roleRepository, passwordEncoder);
+                    JobsInitializer.initJobs(jobService, userService);
+                    initOrders();
+                    initTestOrders();
+                }
+            }catch (Exception e){
+                initializeData(userRepository, roleRepository, passwordEncoder);
+                JobsInitializer.initJobs(jobService, userService);
+                initOrders();
+                initTestOrders();
+            }
         };
     }
 

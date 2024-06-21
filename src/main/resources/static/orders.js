@@ -161,13 +161,25 @@ function addOrderCard(order) {
     const cardHeader = document.createElement('div');
     cardHeader.classList.add('card-header', 'd-flex', 'justify-content-between', 'align-items-center');
 
-    // Show owner name in header instead of order.id
     const ownerName = order.ownerDetails ? order.ownerDetails.ownerName : 'N/A';
+    const passedTimeData = calculatePassedTime(order);
+    const { actualTimePassed, estimatedTimePassed, netDelayMinutes } = passedTimeData;
+
+    let warningIconHTML = '';
+    if (netDelayMinutes !== null) {
+        warningIconHTML = '<i class="fas fa-exclamation-triangle text-warning mx-1"></i>';
+    }
+    let dangerIcon = '';
+    if(!order.currentUser){
+       dangerIcon = '<i class="fas fa-exclamation-circle text-danger mx-1"></i>';
+    }
+
     cardHeader.innerHTML = `
         <div>
             <span class="badge bg-primary">${ownerName}</span>
             ${order.priority ? `<span class="badge bg-secondary">${order.priority}</span>` : ''}
-            ${!order.currentUser ? '<i class="fas fa-exclamation-circle text-danger mx-1"></i>' : ''}
+            ${dangerIcon}
+            ${warningIconHTML}
         </div>
         <div>
             <span class="badge bg-info">${order.currentState ? order.currentState.name : 'N/A'}</span>
@@ -182,6 +194,8 @@ function addOrderCard(order) {
     });
 
     const cardBody = document.createElement('div');
+    const { pendingStates, passedStates } = getPendingStatesAndPassedStates(order);
+
     cardBody.classList.add('card-body', 'd-none');
     cardBody.innerHTML = `
         <p><strong>Owner Details:</strong><br>
@@ -193,10 +207,11 @@ function addOrderCard(order) {
         <p><strong>Amount:</strong> ${order.amount ? order.amount : 'N/A'}</p>
         <p><strong>Note:</strong> ${order.note ? order.note : 'N/A'}</p>
         <p><strong>Creation Date:</strong> ${formatTimestamp(order.timestamp)}</p>
-        <p><strong>Assigned to:</strong> ${order.currentUser ? order.currentUser.username : 'N/A'}</p>
-        <p><strong>Pending States:</strong> ${getPendingStates(order)}</p>
-        <p><strong>Pending Time:</strong> ${calculateTotalEstimate(order, getPendingStates(order))}</p>
-        <p><strong>Passed Time:</strong> ${calculateTimeDifference(new Date(), timestampToDate(order.timestamp))}</p>
+        <p><strong>Assigned to ${dangerIcon}:</strong> ${order.currentUser ? order.currentUser.username : 'N/A'}</p>
+        <p><strong>Pending States:</strong> ${pendingStates}</p>
+        <p><strong>Completed States:</strong> ${passedStates}</p>
+        <p><strong>Pending Time:</strong> ${calculateTotalEstimate(order, pendingStates)}</p>
+        <p><strong>Passed Time ${warningIconHTML}: </strong> ${formatPassedTimeString(passedTimeData)}</p>
 
         <button class="btn btn-danger" onclick="deleteOrder(${order.id})">Delete</button>
     `;
@@ -205,6 +220,8 @@ function addOrderCard(order) {
     card.appendChild(cardBody);
     orderCardsContainer.appendChild(card);
 }
+
+
 
 // Function to fetch orders from the backend
 async function fetchOrders() {
@@ -237,71 +254,79 @@ function sortOrders(orders) {
 
 // Function to format timestamp into 'DD-MM-YY HH:MM'
 function formatTimestamp(timestamp) {
-    const [year, month, day, hour, minute, second, nanosecond] = timestamp;
-    const formattedDate = new Date(year, month - 1, day, hour, minute, second, nanosecond / 1000000);
-    const dayStr = String(formattedDate.getDate()).padStart(2, '0');
-    const monthStr = String(formattedDate.getMonth() + 1).padStart(2, '0');
-    const yearStr = String(formattedDate.getFullYear()).slice(-2);
-    const hourStr = String(formattedDate.getHours()).padStart(2, '0');
-    const minuteStr = String(formattedDate.getMinutes()).padStart(2, '0');
+    const date = timestampToDate(timestamp);
+
+    const dayStr = String(date.getDate()).padStart(2, '0');
+    const monthStr = String(date.getMonth() + 1).padStart(2, '0');
+    const yearStr = String(date.getFullYear()).slice(-2);
+    const hourStr = String(date.getHours()).padStart(2, '0');
+    const minuteStr = String(date.getMinutes()).padStart(2, '0');
     return `${dayStr}-${monthStr}-${yearStr} ${hourStr}:${minuteStr}`;
 }
 
 // Function to calculate total estimate time from pending states
-function calculateTotalEstimate(order, pendingStates) {
+function calculateTotalEstimate(order, pendingPaths) {
     const orderType = order.orderType;
     const jobStates = orderType.jobStates;
 
-    let totalHours = 0;
-    let totalMinutes = 0;
+    function calculateEstimateForPath(path) {
+        let totalHours = 0;
+        let totalMinutes = 0;
 
-    pendingStates.split(' -> ').forEach(stateName => {
-        const jobState = jobStates.find(state => state.name === stateName);
-        if (jobState && jobState.estimate) {
-            totalHours += jobState.estimate[0];
-            totalMinutes += jobState.estimate[1];
-        }
-    });
+        path.forEach(stateName => {
+            const jobState = jobStates.find(state => state.name === stateName);
+            if (jobState && jobState.estimate) {
+                totalHours += jobState.estimate[0];
+                totalMinutes += jobState.estimate[1];
+            }
+        });
 
-    totalHours += Math.floor(totalMinutes / 60);
-    totalMinutes = totalMinutes % 60;
+        totalHours += Math.floor(totalMinutes / 60);
+        totalMinutes = totalMinutes % 60;
 
-    return `${totalHours}h ${totalMinutes}m`;
-}
-
-// Function to calculate time difference between two dates
-function calculateTimeDifference(now, startTimeDate) {
-    const diffMs = now - startTimeDate;
-    const diffHrs = Math.floor(diffMs / 3600000); // milliseconds to hours
-    const diffMins = Math.floor((diffMs % 3600000) / 60000); // remaining milliseconds to minutes
-
-    return `${diffHrs}h ${diffMins}m`;
-}
-
-// Function to get pending states as a string representation
-function getPendingStates(order) {
-    const orderType = order.orderType;
-    const currentState = order.currentState;
-    const fromJobStateIds = orderType.fromJobStateIds;
-    const toJobStateIds = orderType.toJobStateIds;
-    const endState = orderType.endState;
-
-    let pendingStates = [];
-    let currentStateId = currentState.id;
-    let currentIndex = fromJobStateIds.indexOf(currentStateId);
-
-    while (currentStateId !== endState.id && currentIndex !== -1) {
-        const nextStateId = toJobStateIds[currentIndex];
-        const nextState = orderType.jobStates.find(state => state.id === nextStateId);
-
-        if (!nextState) break;
-
-        pendingStates.push(nextState.name);
-        currentStateId = nextState.id;
-        currentIndex = fromJobStateIds.indexOf(currentStateId);
+        return `${totalHours}h ${totalMinutes}m`;
     }
 
-    return pendingStates.join(' -> ');
+    const paths = pendingPaths.split(' | ').map(path => path.split(' -> '));
+    const estimates = paths.map(calculateEstimateForPath);
+
+    return estimates.join(' | ');
+}
+
+
+// Function to format hours and minutes into 'Xh Ym' format
+function formatTime(hours, minutes) {
+    return `${hours}h ${minutes}m`;
+}
+
+// Function to parse actual time difference into hours and minutes
+function parseActualTime(timeString) {
+    const regex = /(\d+)h (\d+)m/;
+    const match = timeString.match(regex);
+    if (match) {
+        const hours = parseInt(match[1]);
+        const minutes = parseInt(match[2]);
+        return [hours, minutes];
+    } else {
+        return [0, 0]; // Default to 0 if parsing fails
+    }
+}
+
+// Function to convert timestamp array to Date object
+function timestampToDate(timestamp) {
+    const [year, month, day, hour, minute, second, nanosecond] = timestamp;
+    const formattedDate = new Date(year, month - 1, day, hour, minute, second, nanosecond / 1000000);
+    return formattedDate;
+}
+
+// Helper function to parse estimated time into hours and minutes
+function parseEstimateTime(estimatedTime) {
+    const regex = /(\d+)h (\d+)m/g;
+    const matches = [...estimatedTime.matchAll(regex)];
+    if (matches.length === 1) {
+        return [parseInt(matches[0][1]), parseInt(matches[0][2])];
+    }
+    return [0, 0];
 }
 
 // Function to delete an order
@@ -326,10 +351,134 @@ async function deleteOrder(orderId) {
     }
 }
 
-// Function to convert timestamp array to Date object
-function timestampToDate(timestamp) {
-    const [year, month, day, hour, minute, second, nanosecond] = timestamp;
-    return new Date(year, month - 1, day, hour, minute, second, nanosecond / 1000000);
+// Function to calculate time difference between two dates
+function calculateTimeDifference(now, startTimeDate) {
+    const diffMs = now - startTimeDate;
+    const diffHrs = Math.floor(diffMs / 3600000); // milliseconds to hours
+    const diffMins = Math.floor((diffMs % 3600000) / 60000); // remaining milliseconds to minutes
+
+    return `${diffHrs}h ${diffMins}m`;
+}
+
+function calculatePassedTime(order) {
+    const { pendingStates, passedStates } = getPendingStatesAndPassedStates(order);
+
+    const actualTimePassed = calculateActualTimePassed(order.timestamp);
+    const orderType = order.orderType;
+    const estimatedTimePassed = calculateTotalEstimateTime(orderType.jobStates, passedStates);
+
+    const actualMinutes = actualTimePassed.hours * 60 + actualTimePassed.minutes;
+    const estimatedMinutes = estimatedTimePassed.hours * 60 + estimatedTimePassed.minutes;
+
+    let netDelayMinutes = null;
+    if (actualMinutes > estimatedMinutes) {
+        netDelayMinutes = actualMinutes - estimatedMinutes;
+    }
+
+    return {
+        actualTimePassed,
+        estimatedTimePassed,
+        netDelayMinutes
+    };
+}
+
+function formatPassedTimeString(passedTimeData) {
+    const { actualTimePassed, estimatedTimePassed, netDelayMinutes } = passedTimeData;
+
+    const actualTimeStr = `${actualTimePassed.hours}h ${actualTimePassed.minutes}m`;
+    const estimatedTimeStr = `${estimatedTimePassed.hours}h ${estimatedTimePassed.minutes}m`;
+
+    let result = `[${actualTimeStr} / ${estimatedTimeStr}]`;
+
+    if (netDelayMinutes !== null) {
+        const netDelayHours = Math.floor(netDelayMinutes / 60);
+        const netDelayRemainderMinutes = netDelayMinutes % 60;
+        const netDelayStr = `${netDelayHours}h ${netDelayRemainderMinutes}m`;
+        result += ` [Net ${netDelayStr} delay]`;
+    }
+
+    return result;
+}
+
+function calculateActualTimePassed(orderTimestamp) {
+    const orderTime = timestampToDate(orderTimestamp);
+
+    const currentTime = new Date();
+
+    let diff = currentTime - orderTime;
+
+    let minutes = Math.floor(diff / 60000);
+    let hours = Math.floor(minutes / 60);
+    minutes = minutes % 60;
+
+    return {
+        hours: hours,
+        minutes: minutes
+    };
+}
+
+function calculateTotalEstimateTime(jobStates, statesData) {
+    const states = statesData.split(' -> ');
+
+    let totalHours = 0;
+    let totalMinutes = 0;
+
+    states.forEach(stateName => {
+        const jobState = jobStates.find(state => state.name === stateName);
+        if (jobState && jobState.estimate) {
+            totalHours += jobState.estimate[0];
+            totalMinutes += jobState.estimate[1];
+        }
+    });
+
+    totalHours += Math.floor(totalMinutes / 60);
+    totalMinutes = totalMinutes % 60;
+
+    return {
+        hours: totalHours,
+        minutes: totalMinutes
+    };
+}
+
+function getPendingStatesAndPassedStates(order) {
+    const orderType = order.orderType;
+    const currentState = order.currentState;
+    const fromJobStateIds = orderType.fromJobStateIds;
+    const toJobStateIds = orderType.toJobStateIds;
+    const startState = orderType.startState;
+    const endState = orderType.endState;
+
+    const jobStatesMap = new Map(orderType.jobStates.map(state => [state.id, state]));
+
+    function traversePath(startId, endId, path) {
+        let currentStateId = startId;
+        let currentIndex = fromJobStateIds.indexOf(currentStateId);
+
+        while (currentStateId !== endId && currentIndex !== -1) {
+            const nextStateId = toJobStateIds[currentIndex];
+            const nextState = jobStatesMap.get(nextStateId);
+
+            if (!nextState) break;
+
+            path.push(nextState.name);
+            currentStateId = nextState.id;
+            currentIndex = fromJobStateIds.indexOf(currentStateId);
+        }
+
+        return path;
+    }
+
+
+    let path = [];
+    path.push(startState.name);
+    const passedStatesPath = traversePath(startState.id, currentState.id, path);
+    path = [];
+    const pendingStatesPath = traversePath(currentState.id, endState.id, path );
+
+    return {
+        pendingStates: pendingStatesPath.join(' -> '),
+        passedStates: passedStatesPath.join(' -> ')
+    };
 }
 
 // Function to toggle the visibility of the order form

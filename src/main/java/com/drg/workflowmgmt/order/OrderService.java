@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -61,8 +62,11 @@ public class OrderService {
 
         return orderRepository.save(order);
     }
-
     public Order moveToState(Long orderId, Long nextStateId) {
+        return  moveToState(orderId,nextStateId,LocalDateTime.now());
+    }
+
+    public Order moveToState(Long orderId, Long nextStateId, LocalDateTime time) {
         Order order = getOrderById(orderId);
         Job job = order.getOrderType();
         JobState currentState = order.getCurrentState();
@@ -86,6 +90,7 @@ public class OrderService {
         User currentUser = userService.getCurrentUser();
 
         Audit audit = new Audit();
+        audit.setTimestamp(time);
         audit.setUser(currentUser);
         audit.setUserRole(currentUser.getRoles().iterator().next().getName());
         audit.setFromState(currentState);
@@ -97,7 +102,7 @@ public class OrderService {
         order.setCurrentUser(null);
 
         if (nextState.getId().equals(order.getOrderType().getEndState().getId())) {
-            archiveOrderAndAudits(order);
+            archiveOrderAndAudits(order,time);
             return order;
         }else {
             return orderRepository.save(order);
@@ -105,10 +110,11 @@ public class OrderService {
 
     }
     @Transactional
-    private void archiveOrderAndAudits(Order order) {
+    private void archiveOrderAndAudits(Order order,LocalDateTime time) {
         try {
             // Archive order
             ArchivedOrder archivedOrder = new ArchivedOrder();
+            archivedOrder.setArchivedAt(time);
             archivedOrder.setId(order.getId());
             archivedOrder.setOrderType(order.getOrderType().getName());
             archivedOrder.setCurrentState(order.getCurrentState().getName());
@@ -131,8 +137,10 @@ public class OrderService {
             for (Audit audit : audits) {
                 ArchivedAudit archivedAudit = new ArchivedAudit();
                 archivedAudit.setId(audit.getId());
-                archivedAudit.setCreatedAt(audit.getTimestamp());
+                archivedAudit.setArchivedAt(audit.getTimestamp());
                 archivedAudit.setUserId(audit.getUser().getId());
+                archivedAudit.setFromStateId(audit.getFromState().getId());
+                archivedAudit.setToStateId(audit.getToState().getId());
                 archivedAudits.add(archivedAudit);
             }
             archivedOrder.setAuditItems(archivedAudits);

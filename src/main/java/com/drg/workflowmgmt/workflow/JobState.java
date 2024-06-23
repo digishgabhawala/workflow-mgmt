@@ -1,10 +1,7 @@
 package com.drg.workflowmgmt.workflow;
 
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+
 import java.time.LocalTime;
 import java.util.List;
 
@@ -16,7 +13,7 @@ public class JobState {
 
     private String name;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     private List<String> roles;
 
     private LocalTime estimate;

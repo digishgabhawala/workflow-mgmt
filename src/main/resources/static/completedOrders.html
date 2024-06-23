@@ -30,47 +30,109 @@
         .card-header {
             cursor: pointer;
         }
-    </style>
-</head>
+
+        /* Add custom styles to adjust the layout of the charts on different screen sizes */
+        .chart-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+
+        .chart-wrapper {
+            flex: 1;
+            min-width: 300px;
+            max-width: 600px;
+            margin: 10px;
+        }
+    </style></head>
 <body>
 <div class="container">
     <div id="ordersContent">
         <header class="bg-primary text-white text-center py-3">
             <h1>Orders Management</h1>
         </header>
-            <div id="archivedOrderTable" class="table-responsive d-none">
+        <div id="analyticsSection" class="my-3">
+            <h3>Analytics Data</h3>
+            <button class="btn btn-primary mb-3" id="toggleUserAnalyticsBtn">
+                <i class="fas fa-eye"></i> Toggle User Analytics
+            </button>
+            <div id="userAnalytics" class="d-none">
+                <div class="chart-container">
+                    <div class="chart-wrapper">
+                        <canvas id="userAnalyticsChart" width="200" height="200"></canvas>
+                    </div>
+                </div>
                 <table class="table table-bordered table-striped table-hover">
                     <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Order Type</th>
-                        <th>Owner Details</th>
-                        <th>Priority</th>
-                        <th>Amount</th>
-                        <th>Total Time Spent</th>
-                        <th>Creation Date</th>
-                        <th>Note</th>
-                    </tr>
-                    <tr>
-                        <th></th>
-                        <th><input type="text" class="form-control" id="filterOrderType" placeholder=""></th>
-                        <th><input type="text" class="form-control" id="filterOwnerDetails" placeholder=""></th>
-                        <th><input type="number" class="form-control" id="filterPriority" placeholder=""></th>
-                        <th></th>
-                        <th></th>
-                        <th><input type="text" class="form-control" id="filterCreationDate" placeholder=""></th>
-                        <th><input type="text" class="form-control" id="filterNote" placeholder=""></th>
+                        <th>User Name</th>
+                        <th>Jobs Completed</th>
+                        <th>Orders Completed</th>
+                        <th>Total Time Spent (HH:MM:SS)</th>
                     </tr>
                     </thead>
-                    <tbody id="archivedOrderTableBody"></tbody>
+                    <tbody id="userAnalyticsTableBody"></tbody>
                 </table>
             </div>
-        </main>
+            <button class="btn btn-primary mb-3" id="toggleJobStateAnalyticsBtn">
+                <i class="fas fa-eye"></i> Toggle Job State Analytics
+            </button>
+            <div id="jobStateAnalytics" class="d-none">
+                <div class="chart-container">
+                    <div class="chart-wrapper">
+                        <canvas id="jobStateAnalyticsChart" width="200" height="200"></canvas>
+                    </div>
+                </div>
+                <table class="table table-bordered table-striped table-hover">
+                    <thead>
+                    <tr>
+                        <th>Job State Name</th>
+                        <th>Jobs Completed</th>
+                        <th>Total Time Taken</th>
+                        <th>Average Time Taken</th>
+                    </tr>
+                    </thead>
+                    <tbody id="jobStateAnalyticsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <button class="btn btn-primary mb-3" id="toggleArchivedOrderTableBtn">
+            <i class="fas fa-eye"></i> Toggle Archived Order Table
+        </button>
+        <div id="archivedOrderTable" class="table-responsive">
+            <h3>Historical Data</h3>
+            <table class="table table-bordered table-striped table-hover archived-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Order Type</th>
+                    <th>Owner Details</th>
+                    <th>Priority</th>
+                    <th>Amount</th>
+                    <th>Total Time Spent</th>
+                    <th>Creation Date</th>
+                    <th>Note</th>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th><input type="text" class="form-control" id="filterOrderType" placeholder=""></th>
+                    <th><input type="text" class="form-control" id="filterOwnerDetails" placeholder=""></th>
+                    <th><input type="number" class="form-control" id="filterPriority" placeholder=""></th>
+                    <th></th>
+                    <th></th>
+                    <th><input type="text" class="form-control" id="filterCreationDate" placeholder=""></th>
+                    <th><input type="text" class="form-control" id="filterNote" placeholder=""></th>
+                </tr>
+                </thead>
+                <tbody id="archivedOrderTableBody"></tbody>
+            </table>
+        </div>
     </div>
 </div>
-
 <!-- Include Bootstrap JS and dependencies -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Include the orders.js file -->
 <script src="completedorders.js"></script>
 <script src="common.js"></script>

@@ -20,7 +20,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import com.github.javafaker.Faker;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class DataInitializer {
@@ -34,9 +38,26 @@ public class DataInitializer {
     @Autowired
     private UserDetailsService userDetailsService;
 
-
     @Autowired
     private UserService userService;
+
+    int ownerDetailsListSize = 10;
+    List<OwnerDetails> ownerDetailsList = new ArrayList<>(10);
+    Faker faker;
+
+    public DataInitializer() {
+        faker = new Faker();
+        for (int i =0;i<ownerDetailsListSize;i++){
+            // Owner details
+            OwnerDetails ownerDetails = new OwnerDetails();
+            ownerDetails.setOwnerName(faker.name().fullName());
+            ownerDetails.setOwnerAddress(faker.address().fullAddress());
+            ownerDetails.setOwnerEmail(faker.internet().emailAddress());
+            ownerDetails.setOwnerMobile(faker.phoneNumber().cellPhone());
+            ownerDetailsList.add(ownerDetails);
+        }
+
+    }
 
     @Bean
     @Transactional
@@ -46,14 +67,15 @@ public class DataInitializer {
                 if( userRepository.count() == 0){
                     initializeData(userRepository, roleRepository, passwordEncoder);
                     JobsInitializer.initJobs(jobService, userService);
-                    initOrders();
                     initTestOrders();
+                    initOrders();
                 }
             }catch (Exception e){
+                e.printStackTrace();
                 initializeData(userRepository, roleRepository, passwordEncoder);
                 JobsInitializer.initJobs(jobService, userService);
-                initOrders();
                 initTestOrders();
+                initOrders();
             }
         };
     }
@@ -87,12 +109,18 @@ public class DataInitializer {
         createUser(userRepository, passwordEncoder, "waiter", waiterRoleFromDb);
         createUser(userRepository, passwordEncoder, "cook", cookRoleFromDb);
         createUser(userRepository, passwordEncoder, "biller", billerRoleFromDb);
+        createUser(userRepository, passwordEncoder, "customer2", customerRoleFromDb);
+        createUser(userRepository, passwordEncoder, "customer3", customerRoleFromDb);
+        createUser(userRepository, passwordEncoder, "customer4", customerRoleFromDb);
+        createUser(userRepository, passwordEncoder, "waiter2", waiterRoleFromDb);
+        createUser(userRepository, passwordEncoder, "cook2", cookRoleFromDb);
+        createUser(userRepository, passwordEncoder, "biller2", billerRoleFromDb);
     }
 
     private void createUser(UserRepository userRepository, PasswordEncoder passwordEncoder, String username, Role role) {
         User user = new User();
         user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(username + "_" + "drg"));
+        user.setPassword(passwordEncoder.encode(username + "_" + "pass"));
         user.setRoles(Set.of(role));
         userRepository.save(user);
     }
@@ -107,109 +135,124 @@ public class DataInitializer {
         List<Job> jobs = jobService.getAllJobs();
         List<JobState> jobStates = jobService.getAllJobStates();
         List<User> users = userService.getAllUsers();
+        List<Role> roles = userService.getAllRoles();
+
+        User admin = users.get(0);
+//        User customer = users.get(1);
+//        User waiter = users.get(2);
+//        User cook = users.get(3);
+//        User biller  = users.get(4);
+        List<User> customers = Arrays.asList(users.get(1),users.get(5),users.get(6),users.get(7));
+        List<User> waiters = Arrays.asList(users.get(2),users.get(8));
+        List<User> cooks = Arrays.asList(users.get(3),users.get(9));
+        List<User> billers = Arrays.asList(users.get(4),users.get(10));
+        Job orderType = jobs.get(0);
+
+        JobState startState = jobStates.get(0);
+        JobState sittingState = jobStates.get(1);
+        JobState orderingState = jobStates.get(2);
+        JobState preparingState = jobStates.get(3);
+        JobState servingState = jobStates.get(4);
+        JobState eatingState = jobStates.get(5);
+        JobState billingState = jobStates.get(6);
+        JobState endState = jobStates.get(7);
+
+
+        int startStateMins = 60;
+        int sittingStateMins = 30;
+        int orderingStateMins = 45;
+        int preparingStateMins = 90;
+        int serviceStateMins = 45;
+        int eatingStateMins = 60;
+        int billingStateMins = 15;
+        int endStateMins = 30;
 
         if (!jobs.isEmpty() && !jobStates.isEmpty() && !users.isEmpty()) {
-            // Simulate a logged-in user
-            User loggedInUser = users.get(0); // Use the first user for initialization
-            setSecurityContext(loggedInUser);
 
-            // Create sample Order
-            Order order = new Order();
-            order.setOrderType(jobs.get(0)); // Assuming the first job is the type
-            order.setCurrentState(jobStates.get(0)); // Assuming the first state as the initial state
+            for(int i=0;i<50;i++){
+                setSecurityContext(admin);
 
-            // Owner details
-            OwnerDetails ownerDetails = new OwnerDetails();
-            ownerDetails.setOwnerName("John Doe");
-            ownerDetails.setOwnerAddress("123 Main St");
-            ownerDetails.setOwnerEmail("john.doe@example.com");
-            ownerDetails.setOwnerMobile("1234567890");
-            order.setOwnerDetails(ownerDetails);
+                LocalDateTime dt = LocalDateTime.now();
 
-            order.setPriority(1); // Higher number means more priority
-            order.setAmount(10.0);
-            order.setNote("This is a sample order");
+                Date fakeDate = faker.date().past(20,1, TimeUnit.DAYS);
+                LocalDateTime ldt = LocalDateTime.ofInstant(fakeDate.toInstant(), ZoneId.systemDefault());
+                // Create sample Order
+                Order order = createFakeOrder(orderType);
+                order.setTimestamp(ldt);
+                order.setCurrentState(startState);
 
-            // Create and add audit items
-            Audit audit = new Audit();
-            audit.setUser(loggedInUser);
-            audit.setUserRole("ROLE_USER");
-            audit.setFromState(jobStates.get(0));
-            audit.setToState(jobStates.get(1)); // Assuming the second state as the next state
-            audit.setNote("Initial audit item");
+                order = orderService.createOrder(order);
 
-            order.setAuditItems(List.of(audit));
-
-            // Save Order
-            try {
-                orderService.createOrder(order);
-            } catch (IllegalArgumentException e) {
-                // Handle validation error
-                e.printStackTrace();
+                fakeDate = moveToNext(customers,sittingState, startStateMins, fakeDate, order);
+                fakeDate = moveToNext(customers, orderingState, orderingStateMins, fakeDate, order);
+                fakeDate = moveToNext(waiters,preparingState, preparingStateMins, fakeDate, order);
+                fakeDate = moveToNext(cooks,servingState, serviceStateMins, fakeDate, order);
+                fakeDate = moveToNext(waiters,eatingState, eatingStateMins, fakeDate, order);
+                fakeDate = moveToNext(customers,billingState, billingStateMins, fakeDate, order);
+                moveToNext(billers,endState, endStateMins, fakeDate, order);
             }
-
             // Clear the security context after initialization
             SecurityContextHolder.clearContext();
         }
     }
+
+    private Date moveToNext(List<User> users, JobState state, int stateTimeInMins,  Date earlierDate, Order order) {
+        User user = users.get(faker.number().numberBetween(0,users.size()));
+        LocalDateTime ldt;
+        int bufferMins = 10;
+        setSecurityContext(user);
+        orderService.assignOrderToMe(order.getId());
+        Date newDate = faker.date().future(stateTimeInMins + bufferMins,TimeUnit.MINUTES, earlierDate);
+        ldt = LocalDateTime.ofInstant(newDate.toInstant(), ZoneId.systemDefault());
+        orderService.moveToState(order.getId(), state.getId(),ldt);
+        return newDate;
+    }
+
     private void initTestOrders() {
         List<Job> jobs = jobService.getAllJobs();
         List<JobState> jobStates = jobService.getAllJobStates();
         List<User> users = userService.getAllUsers();
         List<Role> roles = userService.getAllRoles();
+        JobState startState = jobStates.get(0);
+        JobState endState = jobStates.get(7);
+        JobState dummy = jobStates.get(8);
 
         Job orderType = jobs.get(1);
 
         if (!jobs.isEmpty() && !jobStates.isEmpty() && !users.isEmpty()) {
             // Simulate a logged-in user
             User loggedInUser = userService.findByUsername("admin").get();
-//            User loggedInUser = users.get(0); // Use the first user for initialization
             setSecurityContext(loggedInUser);
             // Create sample Order
             for(int i = 0; i< 10;i++){
-                Order order = initTestOrder(orderType);
-                orderService.moveToState(order.getId(), orderType.getToJobStateIds().get(0));
-                orderService.moveToState(order.getId(),orderType.getEndState().getId());
+                Order order = createFakeOrder(orderType);
+                Date fakeDate = faker.date().past(20,1, TimeUnit.DAYS);
+                LocalDateTime ldt = LocalDateTime.ofInstant(fakeDate.toInstant(), ZoneId.systemDefault());
+                order.setTimestamp(ldt);
+
+                order = orderService.createOrder(order);
+                List<User> admins = Arrays.asList(loggedInUser);
+
+                fakeDate = moveToNext(admins, dummy, 60, fakeDate, order);
+                moveToNext(admins, endState, 30, fakeDate, order);
             }
             // Clear the security context after initialization
             SecurityContextHolder.clearContext();
         }
     }
 
-
-// Assuming other imports are present
-
-    private Order initTestOrder(Job orderType) {
+    private Order createFakeOrder(Job orderType){
         Faker faker = new Faker();
-
-        // Create sample Order
         Order order = new Order();
         order.setOrderType(orderType); // Assuming the first job is the type
 
-        // Owner details
-        OwnerDetails ownerDetails = new OwnerDetails();
-        ownerDetails.setOwnerName(faker.name().fullName());
-        ownerDetails.setOwnerAddress(faker.address().fullAddress());
-        ownerDetails.setOwnerEmail(faker.internet().emailAddress());
-        ownerDetails.setOwnerMobile(faker.phoneNumber().cellPhone());
+        order.setOwnerDetails(ownerDetailsList.get(faker.number().numberBetween(0,9)));
 
-        order.setOwnerDetails(ownerDetails);
-
-        order.setPriority(faker.number().numberBetween(1, 3)); // Random priority between 1 and 10
+        order.setPriority(faker.number().numberBetween(1, 4)); // Random priority between 1 and 10
         order.setAmount(faker.number().randomDouble(0, 1, 100)); // Random amount between 1 and 1000 with 2 decimal places
         order.setNote(faker.lorem().sentence()); // Random lorem sentence for note
-
-        // Save Order
-        try {
-            return orderService.createOrder(order);
-        } catch (IllegalArgumentException e) {
-            // Handle validation error
-            e.printStackTrace();
-        }
-
         return order;
     }
-
 
 
 

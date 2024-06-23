@@ -11,7 +11,24 @@ public class ArchivedAudit {
     private Long id;
 
     private Long userId;
-    private LocalDateTime createdAt;
+    private Long fromStateId;
+    private Long toStateId;
+
+    public Long getFromStateId() {
+        return fromStateId;
+    }
+
+    public void setFromStateId(Long fromStateId) {
+        this.fromStateId = fromStateId;
+    }
+
+    public Long getToStateId() {
+        return toStateId;
+    }
+
+    public void setToStateId(Long toStateId) {
+        this.toStateId = toStateId;
+    }
 
     @Column(updatable = false)
     private LocalDateTime archivedAt = LocalDateTime.now();
@@ -26,20 +43,13 @@ public class ArchivedAudit {
         this.id = id;
     }
 
+
     public Long getUserId() {
         return userId;
     }
 
     public void setUserId(Long userId) {
         this.userId = userId;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 
     public LocalDateTime getArchivedAt() {

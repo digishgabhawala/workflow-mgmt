@@ -87,7 +87,9 @@ public class Audit {
         this.note = note;
     }
 
-
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
 
     public LocalDateTime getTimestamp() {
         return timestamp;

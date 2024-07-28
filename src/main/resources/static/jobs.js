@@ -654,9 +654,25 @@ function markFieldChanged(jobId, fieldId) {
     document.getElementById(`fieldChanged-${jobId}-${fieldId}`).value = 'true';
 }
 
-function deleteAdditionalField(jobId, fieldId, deleteButton) {
+async function deleteAdditionalField(jobId, fieldId, deleteButton) {
     const fieldCard = deleteButton.closest('.card');
-    fieldCard.remove();
+
+    // Assuming you have a way to uniquely identify the additional field in your backend,
+    // you might need to adjust this endpoint according to your actual API design.
+    const response = await fetch(`/jobs/${jobId}/additionalfields/${fieldId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': await fetchCsrfToken()
+        }
+    });
+
+    if (response.ok) {
+        fieldCard.remove();
+        console.log(`Deleted field ${fieldId} from job ${jobId}`);
+    } else {
+        console.error(`Failed to delete field ${fieldId} from job ${jobId}`);
+    }
 }
 
 function updateFieldName(jobId, fieldId, inputElement) {

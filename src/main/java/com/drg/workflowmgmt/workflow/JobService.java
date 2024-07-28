@@ -178,4 +178,16 @@ public class JobService {
         }
         return null;
     }
+
+    public Job deleteAdditionalFields(Long jobId, Long fieldIdx) {
+        Optional<Job> jobOpt = jobRepository.findById(jobId);
+        if (jobOpt.isPresent()) {
+            Job job = jobOpt.get();
+            if(job.getAdditionalFields().size() > fieldIdx){
+                job.getAdditionalFields().remove(fieldIdx.intValue());
+            }
+            return jobRepository.save(job);
+        }
+        return null;
+    }
 }

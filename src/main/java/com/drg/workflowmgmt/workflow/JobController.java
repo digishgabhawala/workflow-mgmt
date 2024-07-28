@@ -118,6 +118,21 @@ public class JobController {
         }
     }
 
+
+    @DeleteMapping("/{jobId}/additionalfields/{fieldIdx}")
+    public ResponseEntity<?> addAdditionalFields(@PathVariable Long jobId,@PathVariable Long fieldIdx) {
+        try {
+            Job updatedJob = jobService.deleteAdditionalFields(jobId, fieldIdx);
+            if (updatedJob != null) {
+                return ResponseEntity.ok(updatedJob);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST));
+        }
+    }
+
     @PostMapping("/{jobId}/additionalfields")
     public ResponseEntity<?> addAdditionalFields(@PathVariable Long jobId, @RequestBody AdditionalFieldsRequest additionalFieldsRequest) {
         try {

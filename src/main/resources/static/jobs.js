@@ -531,9 +531,9 @@ function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList
             <button class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('additionalFieldsForm-${job.id}').classList.toggle('d-none');">
                 <i class="fas fa-plus"></i> Add Form Fields
             </button>
+            <div id="additionalFieldsContainer-${job.id}">
+            </div>
             <form id="additionalFieldsForm-${job.id}" class="d-none mt-2" onsubmit="handleAddFormFields(event, ${job.id})">
-                <div id="additionalFieldsContainer-${job.id}">
-                </div>
                 <button type="button" class="btn btn-secondary btn-sm" onclick="addAdditionalField(${job.id}, document.getElementById('additionalFieldsContainer-${job.id}'))">Add Another Field</button>
                 <button type="submit" class="btn btn-primary btn-sm">Submit</button>
             </form>

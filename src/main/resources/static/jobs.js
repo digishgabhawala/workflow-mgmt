@@ -270,6 +270,7 @@ async function loadJobs() {
         const transitionsList = generateTransitionsList(job, jobStates);
 
         const card = createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList, transitionsList);
+
         jobsCards.appendChild(card);
     });
 
@@ -511,6 +512,20 @@ function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList
         </div>
     `;
 
+    const additionalInfoContent = job.additionalInfo && job.additionalInfo.length > 0 ? `
+        <div id="additionalInfo-${job.id}">
+            <h6>Additional Information</h6>
+            <ul class="list-group">
+                ${job.additionalInfo.map(info => `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        ${info.fieldName}: ${info.fieldType}
+                        ${info.mandatory ? '<span class="badge badge-primary">Mandatory</span>' : ''}
+                    </li>
+                `).join('')}
+            </ul>
+        </div>
+    ` : '';
+
     const additionalFieldsForm = `
         <div id="additionalFields-${job.id}">
             <button class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('additionalFieldsForm-${job.id}').classList.toggle('d-none');addAdditionalField(${job.id}, document.getElementById('additionalFieldsContainer-${job.id}'))">
@@ -538,6 +553,7 @@ function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList
             <div class="card-body d-none">
                 ${jobStatesContent}
                 ${transitionsContent}
+                ${additionalInfoContent}
                 ${additionalFieldsForm}
             </div>
         </div>
@@ -567,40 +583,60 @@ function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList
 
     return card;
 }
-
-
 function addAdditionalField(jobId, container) {
-    const newFieldId = container.children.length;
-    const newFieldGroup = document.createElement('div');
-    newFieldGroup.classList.add('additional-field-group');
-    newFieldGroup.id = `additional-field-group-${newFieldId}`;
+    const fieldId = container.children.length;
 
-    newFieldGroup.innerHTML = `
-        <div class="form-group">
-            <label for="fieldName-${jobId}-${newFieldId}">Field Name</label>
-            <input type="text" id="fieldName-${jobId}-${newFieldId}" class="form-control">
+    const fieldCard = document.createElement('div');
+    fieldCard.classList.add('card', 'mb-3');
+    fieldCard.innerHTML = `
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="card-title m-0">Additional Field ${fieldId + 1}</h6>
+            <div class="ml-auto d-flex align-items-center">
+                <i class="fas fa-chevron-down ml-2"></i>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="fieldType-${jobId}-${newFieldId}">Field Type</label>
-            <input type="text" id="fieldType-${jobId}-${newFieldId}" class="form-control">
-        </div>
-        <div class="form-group">
-            <label for="partOfForm-${jobId}-${newFieldId}">Part Of Form</label>
-            <input type="text" id="partOfForm-${jobId}-${newFieldId}" class="form-control">
-        </div>
-        <div class="form-group">
-            <label>Mandatory</label>
-            <div>
-                <input type="radio" id="mandatory-${jobId}-${newFieldId}-yes" name="mandatory-${jobId}-${newFieldId}" value="yes">
-                <label for="mandatory-${jobId}-${newFieldId}-yes">Yes</label>
-                <input type="radio" id="mandatory-${jobId}-${newFieldId}-no" name="mandatory-${jobId}-${newFieldId}" value="no">
-                <label for="mandatory-${jobId}-${newFieldId}-no">No</label>
+        <div class="card-body d-none">
+            <div class="form-group">
+                <label for="fieldName-${jobId}-${fieldId}">Field Name:</label>
+                <input type="text" id="fieldName-${jobId}-${fieldId}" name="fieldName-${jobId}" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="fieldType-${jobId}-${fieldId}">Field Type:</label>
+                <select id="fieldType-${jobId}-${fieldId}" name="fieldType-${jobId}" class="form-control">
+                    <option value="text">Text</option>
+                    <option value="number">Number</option>
+                    <option value="date">Date</option>
+                    <!-- Add more options as needed -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="partOfForm-${jobId}-${fieldId}">Part of Form:</label>
+                <input type="text" id="partOfForm-${jobId}-${fieldId}" name="partOfForm-${jobId}" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Mandatory:</label>
+                <div>
+                    <input type="radio" id="mandatoryYes-${jobId}-${fieldId}" name="mandatory-${jobId}-${fieldId}" value="yes">
+                    <label for="mandatoryYes-${jobId}-${fieldId}">Yes</label>
+                    <input type="radio" id="mandatoryNo-${jobId}-${fieldId}" name="mandatory-${jobId}-${fieldId}" value="no">
+                    <label for="mandatoryNo-${jobId}-${fieldId}">No</label>
+                </div>
             </div>
         </div>
     `;
 
-    container.appendChild(newFieldGroup);
+    const fieldCardHeader = fieldCard.querySelector('.card-header');
+    const fieldCardBody = fieldCard.querySelector('.card-body');
+
+    fieldCardHeader.addEventListener('click', () => {
+        fieldCardBody.classList.toggle('d-none');
+        const icon = fieldCardHeader.querySelector('.fa-chevron-down');
+        icon.classList.toggle('fa-chevron-up');
+    });
+
+    container.appendChild(fieldCard);
 }
+
 
 
 async function handleAddFormFields(event, jobId) {

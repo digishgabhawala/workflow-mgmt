@@ -590,20 +590,21 @@ function addAdditionalField(jobId, container, field = { fieldName: "New Addition
             <h6 class="card-title m-0">${field.fieldName || 'New Additional Field'}</h6>
             <div class="ml-auto d-flex align-items-center">
                 <button class="btn btn-sm btn-danger mr-2" onclick="deleteAdditionalField(${jobId}, ${fieldId}, this)">
-                    <i class="fas fa-trash"></i>
+                    <i class="fas fa-trash"></i> Delete
                 </button>
                 <i class="fas fa-chevron-down ml-2"></i>
             </div>
         </div>
         <div class="card-body d-none">
+            <input type="hidden" id="fieldChanged-${jobId}-${fieldId}" value="false">
             <div class="form-group">
                 <label for="fieldName-${jobId}-${fieldId}">Field Name:</label>
-                <input type="text" id="fieldName-${jobId}-${fieldId}" name="fieldName-${jobId}" class="form-control" value="${field.fieldName}" oninput="updateFieldName(${jobId}, ${fieldId}, this)">
+                <input type="text" id="fieldName-${jobId}-${fieldId}" name="fieldName-${jobId}" class="form-control" value="${field.fieldName}" oninput="updateFieldName(${jobId}, ${fieldId}, this); markFieldChanged(${jobId}, ${fieldId});">
                 <div class="invalid-feedback">Field name is required.</div>
             </div>
             <div class="form-group">
                 <label for="fieldType-${jobId}-${fieldId}">Field Type:</label>
-                <select id="fieldType-${jobId}-${fieldId}" name="fieldType-${jobId}" class="form-control">
+                <select id="fieldType-${jobId}-${fieldId}" name="fieldType-${jobId}" class="form-control" onchange="markFieldChanged(${jobId}, ${fieldId});">
                     <option value="text" ${field.fieldType === "text" ? "selected" : ""}>Text</option>
                     <option value="number" ${field.fieldType === "number" ? "selected" : ""}>Number</option>
                     <option value="date" ${field.fieldType === "date" ? "selected" : ""}>Date</option>
@@ -612,14 +613,14 @@ function addAdditionalField(jobId, container, field = { fieldName: "New Addition
             </div>
             <div class="form-group">
                 <label for="partOfForm-${jobId}-${fieldId}">Part of Form:</label>
-                <input type="text" id="partOfForm-${jobId}-${fieldId}" name="partOfForm-${jobId}" class="form-control" value="${field.partOfForm}">
+                <input type="text" id="partOfForm-${jobId}-${fieldId}" name="partOfForm-${jobId}" class="form-control" value="${field.partOfForm}" oninput="markFieldChanged(${jobId}, ${fieldId});">
             </div>
             <div class="form-group">
                 <label>Mandatory:</label>
                 <div>
-                    <input type="radio" id="mandatoryYes-${jobId}-${fieldId}" name="mandatory-${jobId}-${fieldId}" value="yes" ${field.mandatory ? "checked" : ""}>
+                    <input type="radio" id="mandatoryYes-${jobId}-${fieldId}" name="mandatory-${jobId}-${fieldId}" value="yes" ${field.mandatory ? "checked" : ""} onclick="markFieldChanged(${jobId}, ${fieldId});">
                     <label for="mandatoryYes-${jobId}-${fieldId}">Yes</label>
-                    <input type="radio" id="mandatoryNo-${jobId}-${fieldId}" name="mandatory-${jobId}-${fieldId}" value="no" ${!field.mandatory ? "checked" : ""}>
+                    <input type="radio" id="mandatoryNo-${jobId}-${fieldId}" name="mandatory-${jobId}-${fieldId}" value="no" ${!field.mandatory ? "checked" : ""} onclick="markFieldChanged(${jobId}, ${fieldId});">
                     <label for="mandatoryNo-${jobId}-${fieldId}">No</label>
                 </div>
             </div>
@@ -649,18 +650,14 @@ function addAdditionalField(jobId, container, field = { fieldName: "New Addition
     container.appendChild(fieldCard);
 }
 
-
 function markFieldChanged(jobId, fieldId) {
     document.getElementById(`fieldChanged-${jobId}-${fieldId}`).value = 'true';
 }
-
 
 function deleteAdditionalField(jobId, fieldId, deleteButton) {
     const fieldCard = deleteButton.closest('.card');
     fieldCard.remove();
 }
-
-
 
 function updateFieldName(jobId, fieldId, inputElement) {
     const cardTitle = document.querySelector(`#additionalFieldsContainer-${jobId} .card:nth-child(${fieldId + 1}) .card-title`);
@@ -671,9 +668,6 @@ function updateFieldName(jobId, fieldId, inputElement) {
         inputElement.classList.remove('is-invalid');
     }
 }
-
-
-
 async function handleAddFormFields(event, jobId) {
     event.preventDefault();
     const csrfToken = await fetchCsrfToken();
@@ -681,13 +675,21 @@ async function handleAddFormFields(event, jobId) {
     const additionalFields = [];
 
     additionalFieldsContainer.querySelectorAll('.card').forEach((fieldGroup, index) => {
-        const fieldName = fieldGroup.querySelector(`#fieldName-${jobId}-${index}`).value;
-        const fieldType = fieldGroup.querySelector(`#fieldType-${jobId}-${index}`).value;
-        const partOfForm = fieldGroup.querySelector(`#partOfForm-${jobId}-${index}`).value;
-        const mandatory = fieldGroup.querySelector(`input[name="mandatory-${jobId}-${index}"]:checked`).value === 'yes';
+        const fieldChanged = fieldGroup.querySelector(`#fieldChanged-${jobId}-${index}`).value;
+        if (fieldChanged === 'true') {
+            const fieldName = fieldGroup.querySelector(`#fieldName-${jobId}-${index}`).value;
+            const fieldType = fieldGroup.querySelector(`#fieldType-${jobId}-${index}`).value;
+            const partOfForm = fieldGroup.querySelector(`#partOfForm-${jobId}-${index}`).value;
+            const mandatory = fieldGroup.querySelector(`input[name="mandatory-${jobId}-${index}"]:checked`).value === 'yes';
 
-        additionalFields.push({ fieldName, fieldType, partOfForm, mandatory });
+            additionalFields.push({ fieldName, fieldType, partOfForm, mandatory });
+        }
     });
+
+    if (additionalFields.length === 0) {
+        console.log('No changes in additional fields');
+        return;
+    }
 
     const response = await fetch(`/jobs/${jobId}/additionalfields`, {
         method: 'POST',
@@ -704,6 +706,7 @@ async function handleAddFormFields(event, jobId) {
         console.error('Failed to add additional fields');
     }
 }
+
 
 
 

@@ -528,7 +528,7 @@ function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList
 
     const additionalFieldsForm = `
         <div id="additionalFields-${job.id}">
-            <button class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('additionalFieldsForm-${job.id}').classList.toggle('d-none');addAdditionalField(${job.id}, document.getElementById('additionalFieldsContainer-${job.id}'))">
+            <button class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('additionalFieldsForm-${job.id}').classList.toggle('d-none');">
                 <i class="fas fa-plus"></i> Add Form Fields
             </button>
             <form id="additionalFieldsForm-${job.id}" class="d-none mt-2" onsubmit="handleAddFormFields(event, ${job.id})">
@@ -572,53 +572,54 @@ function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList
     const additionalFieldsContainer = card.querySelector(`#additionalFieldsContainer-${job.id}`);
     if (additionalFieldsContainer && job.additionalFields) {
         job.additionalFields.forEach((field, index) => {
-            addAdditionalField(job.id, additionalFieldsContainer);
-            const newFieldId = additionalFieldsContainer.children.length - 1;
-            additionalFieldsContainer.querySelector(`#fieldName-${job.id}-${newFieldId}`).value = field.fieldName;
-            additionalFieldsContainer.querySelector(`#fieldType-${job.id}-${newFieldId}`).value = field.fieldType;
-            additionalFieldsContainer.querySelector(`#partOfForm-${job.id}-${newFieldId}`).value = field.partOfForm;
-            additionalFieldsContainer.querySelector(`input[name="mandatory-${job.id}-${newFieldId}"][value="${field.mandatory ? 'yes' : 'no'}"]`).checked = true;
+            addAdditionalField(job.id, additionalFieldsContainer, field);
         });
     }
 
     return card;
 }
-function addAdditionalField(jobId, container) {
+
+
+function addAdditionalField(jobId, container, field = { fieldName: "New Additional Field", fieldType: "", partOfForm: "", mandatory: false }) {
     const fieldId = container.children.length;
 
     const fieldCard = document.createElement('div');
-    fieldCard.classList.add('card', 'mb-3');
+    fieldCard.classList.add('card', 'mb-3', 'additional-field-group');
     fieldCard.innerHTML = `
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h6 class="card-title m-0">Additional Field ${fieldId + 1}</h6>
+            <h6 class="card-title m-0">${field.fieldName || 'New Additional Field'}</h6>
             <div class="ml-auto d-flex align-items-center">
+                <button class="btn btn-sm btn-danger mr-2" onclick="deleteAdditionalField(${jobId}, ${fieldId}, this)">
+                    <i class="fas fa-trash"></i>
+                </button>
                 <i class="fas fa-chevron-down ml-2"></i>
             </div>
         </div>
         <div class="card-body d-none">
             <div class="form-group">
                 <label for="fieldName-${jobId}-${fieldId}">Field Name:</label>
-                <input type="text" id="fieldName-${jobId}-${fieldId}" name="fieldName-${jobId}" class="form-control">
+                <input type="text" id="fieldName-${jobId}-${fieldId}" name="fieldName-${jobId}" class="form-control" value="${field.fieldName}" oninput="updateFieldName(${jobId}, ${fieldId}, this)">
+                <div class="invalid-feedback">Field name is required.</div>
             </div>
             <div class="form-group">
                 <label for="fieldType-${jobId}-${fieldId}">Field Type:</label>
                 <select id="fieldType-${jobId}-${fieldId}" name="fieldType-${jobId}" class="form-control">
-                    <option value="text">Text</option>
-                    <option value="number">Number</option>
-                    <option value="date">Date</option>
+                    <option value="text" ${field.fieldType === "text" ? "selected" : ""}>Text</option>
+                    <option value="number" ${field.fieldType === "number" ? "selected" : ""}>Number</option>
+                    <option value="date" ${field.fieldType === "date" ? "selected" : ""}>Date</option>
                     <!-- Add more options as needed -->
                 </select>
             </div>
             <div class="form-group">
                 <label for="partOfForm-${jobId}-${fieldId}">Part of Form:</label>
-                <input type="text" id="partOfForm-${jobId}-${fieldId}" name="partOfForm-${jobId}" class="form-control">
+                <input type="text" id="partOfForm-${jobId}-${fieldId}" name="partOfForm-${jobId}" class="form-control" value="${field.partOfForm}">
             </div>
             <div class="form-group">
                 <label>Mandatory:</label>
                 <div>
-                    <input type="radio" id="mandatoryYes-${jobId}-${fieldId}" name="mandatory-${jobId}-${fieldId}" value="yes">
+                    <input type="radio" id="mandatoryYes-${jobId}-${fieldId}" name="mandatory-${jobId}-${fieldId}" value="yes" ${field.mandatory ? "checked" : ""}>
                     <label for="mandatoryYes-${jobId}-${fieldId}">Yes</label>
-                    <input type="radio" id="mandatoryNo-${jobId}-${fieldId}" name="mandatory-${jobId}-${fieldId}" value="no">
+                    <input type="radio" id="mandatoryNo-${jobId}-${fieldId}" name="mandatory-${jobId}-${fieldId}" value="no" ${!field.mandatory ? "checked" : ""}>
                     <label for="mandatoryNo-${jobId}-${fieldId}">No</label>
                 </div>
             </div>
@@ -627,6 +628,7 @@ function addAdditionalField(jobId, container) {
 
     const fieldCardHeader = fieldCard.querySelector('.card-header');
     const fieldCardBody = fieldCard.querySelector('.card-body');
+    const fieldNameInput = fieldCard.querySelector(`#fieldName-${jobId}-${fieldId}`);
 
     fieldCardHeader.addEventListener('click', () => {
         fieldCardBody.classList.toggle('d-none');
@@ -634,7 +636,40 @@ function addAdditionalField(jobId, container) {
         icon.classList.toggle('fa-chevron-up');
     });
 
+    fieldNameInput.addEventListener('input', () => {
+        const cardTitle = fieldCard.querySelector('.card-title');
+        cardTitle.textContent = fieldNameInput.value || "New Additional Field";
+        if (!fieldNameInput.value) {
+            fieldNameInput.classList.add('is-invalid');
+        } else {
+            fieldNameInput.classList.remove('is-invalid');
+        }
+    });
+
     container.appendChild(fieldCard);
+}
+
+
+function markFieldChanged(jobId, fieldId) {
+    document.getElementById(`fieldChanged-${jobId}-${fieldId}`).value = 'true';
+}
+
+
+function deleteAdditionalField(jobId, fieldId, deleteButton) {
+    const fieldCard = deleteButton.closest('.card');
+    fieldCard.remove();
+}
+
+
+
+function updateFieldName(jobId, fieldId, inputElement) {
+    const cardTitle = document.querySelector(`#additionalFieldsContainer-${jobId} .card:nth-child(${fieldId + 1}) .card-title`);
+    cardTitle.textContent = inputElement.value || 'New Additional Field';
+    if (!inputElement.value) {
+        inputElement.classList.add('is-invalid');
+    } else {
+        inputElement.classList.remove('is-invalid');
+    }
 }
 
 
@@ -645,11 +680,11 @@ async function handleAddFormFields(event, jobId) {
     const additionalFieldsContainer = document.getElementById(`additionalFieldsContainer-${jobId}`);
     const additionalFields = [];
 
-    additionalFieldsContainer.querySelectorAll('.additional-field-group').forEach(fieldGroup => {
-        const fieldName = fieldGroup.querySelector(`#fieldName-${jobId}-${fieldGroup.id.split('-').pop()}`).value;
-        const fieldType = fieldGroup.querySelector(`#fieldType-${jobId}-${fieldGroup.id.split('-').pop()}`).value;
-        const partOfForm = fieldGroup.querySelector(`#partOfForm-${jobId}-${fieldGroup.id.split('-').pop()}`).value;
-        const mandatory = fieldGroup.querySelector(`input[name="mandatory-${jobId}-${fieldGroup.id.split('-').pop()}"]:checked`).value === 'yes';
+    additionalFieldsContainer.querySelectorAll('.card').forEach((fieldGroup, index) => {
+        const fieldName = fieldGroup.querySelector(`#fieldName-${jobId}-${index}`).value;
+        const fieldType = fieldGroup.querySelector(`#fieldType-${jobId}-${index}`).value;
+        const partOfForm = fieldGroup.querySelector(`#partOfForm-${jobId}-${index}`).value;
+        const mandatory = fieldGroup.querySelector(`input[name="mandatory-${jobId}-${index}"]:checked`).value === 'yes';
 
         additionalFields.push({ fieldName, fieldType, partOfForm, mandatory });
     });
@@ -669,6 +704,7 @@ async function handleAddFormFields(event, jobId) {
         console.error('Failed to add additional fields');
     }
 }
+
 
 
 

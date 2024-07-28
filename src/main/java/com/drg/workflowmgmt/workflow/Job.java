@@ -3,6 +3,7 @@ package com.drg.workflowmgmt.workflow;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 public class Job {
@@ -40,6 +41,9 @@ public class Job {
     @ManyToOne
     @JoinColumn(name = "end_state_id", nullable = false)
     private JobState endState;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    private List<AdditionalField> additionalFields = new ArrayList<>();
 
     // Constructors, getters, setters
 
@@ -97,5 +101,13 @@ public class Job {
 
     public void setEndState(JobState endState) {
         this.endState = endState;
+    }
+
+    public List<AdditionalField> getAdditionalFields() {
+        return additionalFields;
+    }
+
+    public void setAdditionalFields(List<AdditionalField> additionalFields) {
+        this.additionalFields = additionalFields;
     }
 }

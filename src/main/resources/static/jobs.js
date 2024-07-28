@@ -511,6 +511,20 @@ function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList
         </div>
     `;
 
+    const additionalFieldsForm = `
+        <div id="additionalFields-${job.id}">
+            <button class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('additionalFieldsForm-${job.id}').classList.toggle('d-none');addAdditionalField(${job.id})">
+                <i class="fas fa-plus"></i> Add Form Fields
+            </button>
+            <form id="additionalFieldsForm-${job.id}" class="d-none mt-2" onsubmit="handleAddFormFields(event, ${job.id})">
+                <div id="additionalFieldsContainer-${job.id}">
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="addAdditionalField(${job.id})">Add Another Field</button>
+                <button type="submit" class="btn btn-primary btn-sm">Submit</button>
+            </form>
+        </div>
+    `;
+
     const card = document.createElement('div');
     card.classList.add('col-12', 'mb-4');
     card.innerHTML = `
@@ -524,6 +538,7 @@ function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList
             <div class="card-body d-none">
                 ${jobStatesContent}
                 ${transitionsContent}
+                ${additionalFieldsForm}
             </div>
         </div>
     `;
@@ -537,9 +552,87 @@ function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList
         icon.classList.toggle('fa-chevron-up');
     });
 
+    // Add initial additional fields using the existing function
+//    const additionalFieldsContainer = card.querySelector(`#additionalFieldsContainer-${job.id}`);
+//    job.additionalFields.forEach((field, index) => {
+//        addAdditionalField(job.id);
+//        const newFieldId = additionalFieldsContainer.children.length;
+//        additionalFieldsContainer.querySelector(`#fieldName-${job.id}-${newFieldId}`).value = field.fieldName;
+//        additionalFieldsContainer.querySelector(`#fieldType-${job.id}-${newFieldId}`).value = field.fieldType;
+//        additionalFieldsContainer.querySelector(`#partOfForm-${job.id}-${newFieldId}`).value = field.partOfForm;
+//        additionalFieldsContainer.querySelector(`input[name="mandatory-${job.id}-${newFieldId}"][value="${field.mandatory ? 'yes' : 'no'}"]`).checked = true;
+//    });
+
     return card;
 }
 
+function addAdditionalField(jobId) {
+    const container = document.getElementById(`additionalFieldsContainer-${jobId}`);
+    const newFieldId = container.children.length + 1; // unique identifier for new field
+
+    const newField = document.createElement('div');
+    newField.classList.add('additional-field-group');
+    newField.setAttribute('id', `additionalFieldGroup-${jobId}-${newFieldId}`);
+
+    newField.innerHTML = `
+        <div class="form-group">
+            <label for="fieldName-${jobId}-${newFieldId}">Field Name:</label>
+            <input type="text" class="form-control" id="fieldName-${jobId}-${newFieldId}" required>
+        </div>
+        <div class="form-group">
+            <label for="fieldType-${jobId}-${newFieldId}">Field Type:</label>
+            <select class="form-control" id="fieldType-${jobId}-${newFieldId}">
+                <option value="text">Text</option>
+                <option value="number">Number</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="partOfForm-${jobId}-${newFieldId}">Part of Form:</label>
+            <input type="text" class="form-control" id="partOfForm-${jobId}-${newFieldId}">
+        </div>
+        <div class="form-group">
+            <label>Mandatory:</label>
+            <div>
+                <input type="radio" id="mandatoryYes-${jobId}-${newFieldId}" name="mandatory-${jobId}-${newFieldId}" value="yes">
+                <label for="mandatoryYes-${jobId}-${newFieldId}">Yes</label>
+                <input type="radio" id="mandatoryNo-${jobId}-${newFieldId}" name="mandatory-${jobId}-${newFieldId}" value="no" checked>
+                <label for="mandatoryNo-${jobId}-${newFieldId}">No</label>
+            </div>
+        </div>
+    `;
+    container.appendChild(newField);
+}
+
+async function handleAddFormFields(event, jobId) {
+    event.preventDefault();
+    const csrfToken = await fetchCsrfToken();
+    const additionalFieldsContainer = document.getElementById(`additionalFieldsContainer-${jobId}`);
+    const additionalFields = [];
+
+    additionalFieldsContainer.querySelectorAll('.additional-field-group').forEach(fieldGroup => {
+        const fieldName = fieldGroup.querySelector(`#fieldName-${jobId}-${fieldGroup.id.split('-').pop()}`).value;
+        const fieldType = fieldGroup.querySelector(`#fieldType-${jobId}-${fieldGroup.id.split('-').pop()}`).value;
+        const partOfForm = fieldGroup.querySelector(`#partOfForm-${jobId}-${fieldGroup.id.split('-').pop()}`).value;
+        const mandatory = fieldGroup.querySelector(`input[name="mandatory-${jobId}-${fieldGroup.id.split('-').pop()}"]:checked`).value === 'yes';
+
+        additionalFields.push({ fieldName, fieldType, partOfForm, mandatory });
+    });
+
+    const response = await fetch(`/jobs/${jobId}/additionalfields`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({ additionalFields })
+    });
+
+    if (response.ok) {
+        loadJobs(); // Refresh the jobs list
+    } else {
+        console.error('Failed to add additional fields');
+    }
+}
 
 
 

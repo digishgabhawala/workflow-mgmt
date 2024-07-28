@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -167,5 +168,14 @@ public class JobService {
             jobRepository.deleteById(id);
             return true;
         }
+    }
+    public Job addAdditionalFields(Long jobId, List<AdditionalField> additionalFields) {
+        Optional<Job> jobOpt = jobRepository.findById(jobId);
+        if (jobOpt.isPresent()) {
+            Job job = jobOpt.get();
+            job.getAdditionalFields().addAll(additionalFields);
+            return jobRepository.save(job);
+        }
+        return null;
     }
 }

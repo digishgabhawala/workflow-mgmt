@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/jobs")
@@ -117,6 +118,20 @@ public class JobController {
         }
     }
 
+    @PostMapping("/{jobId}/additionalfields")
+    public ResponseEntity<?> addAdditionalFields(@PathVariable Long jobId, @RequestBody AdditionalFieldsRequest additionalFieldsRequest) {
+        try {
+            Job updatedJob = jobService.addAdditionalFields(jobId, additionalFieldsRequest.getAdditionalFields());
+            if (updatedJob != null) {
+                return ResponseEntity.ok(updatedJob);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST));
+        }
+    }
+
 
     public static class JobRequest {
         private String name;
@@ -213,6 +228,18 @@ public class JobController {
 
         public void setStatus(HttpStatus status) {
             this.status = status;
+        }
+    }
+
+    public static class AdditionalFieldsRequest {
+        private List<AdditionalField> additionalFields;
+
+        public List<AdditionalField> getAdditionalFields() {
+            return additionalFields;
+        }
+
+        public void setAdditionalFields(List<AdditionalField> additionalFields) {
+            this.additionalFields = additionalFields;
         }
     }
 }

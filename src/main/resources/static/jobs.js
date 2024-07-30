@@ -528,13 +528,13 @@ function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList
 
     const additionalFieldsForm = `
         <div id="additionalFields-${job.id}">
-            <button class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('additionalFieldsForm-${job.id}').classList.toggle('d-none');">
+            <button class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('additionalFieldsForm-${job.id}').classList.toggle('d-none');addAdditionalField(${job.id}, document.getElementById('additionalFieldsContainer-${job.id}'),true)">
                 <i class="fas fa-plus"></i> Add Form Fields
             </button>
             <div id="additionalFieldsContainer-${job.id}">
             </div>
             <form id="additionalFieldsForm-${job.id}" class="d-none mt-2" onsubmit="handleAddFormFields(event, ${job.id})">
-                <button type="button" class="btn btn-secondary btn-sm" onclick="addAdditionalField(${job.id}, document.getElementById('additionalFieldsContainer-${job.id}'))">Add Another Field</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="addAdditionalField(${job.id}, document.getElementById('additionalFieldsContainer-${job.id}'),true)">Add Another Field</button>
                 <button type="submit" class="btn btn-primary btn-sm">Submit</button>
             </form>
         </div>
@@ -572,7 +572,7 @@ function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList
     const additionalFieldsContainer = card.querySelector(`#additionalFieldsContainer-${job.id}`);
     if (additionalFieldsContainer && job.additionalFields) {
         job.additionalFields.forEach((field, index) => {
-            addAdditionalField(job.id, additionalFieldsContainer, field);
+            addAdditionalField(job.id, additionalFieldsContainer,false, field);
         });
     }
 
@@ -580,7 +580,7 @@ function createJobCard(job, jobStateOptions, jobTransitionOptions, jobStatesList
 }
 
 
-function addAdditionalField(jobId, container, field = { fieldName: "New Additional Field", fieldType: "", partOfForm: "", mandatory: false }) {
+function addAdditionalField(jobId, container,expand , field = { fieldName: "New Additional Field", fieldType: "", partOfForm: "", mandatory: false }) {
     const fieldId = container.children.length;
 
     const fieldCard = document.createElement('div');
@@ -590,12 +590,12 @@ function addAdditionalField(jobId, container, field = { fieldName: "New Addition
             <h6 class="card-title m-0">${field.fieldName || 'New Additional Field'}</h6>
             <div class="ml-auto d-flex align-items-center">
                 <button class="btn btn-sm btn-danger mr-2" onclick="deleteAdditionalField(${jobId}, ${fieldId}, this)">
-                    <i class="fas fa-trash"></i> Delete
+                    <i class="fas fa-trash"></i>
                 </button>
                 <i class="fas fa-chevron-down ml-2"></i>
             </div>
         </div>
-        <div class="card-body d-none">
+        <div class="card-body ${expand ? '' : 'd-none'}">
             <input type="hidden" id="fieldChanged-${jobId}-${fieldId}" value="false">
             <div class="form-group">
                 <label for="fieldName-${jobId}-${fieldId}">Field Name:</label>
@@ -648,6 +648,13 @@ function addAdditionalField(jobId, container, field = { fieldName: "New Addition
     });
 
     container.appendChild(fieldCard);
+
+    // Automatically expand the field card if `expand` is true
+    if (expand) {
+        fieldCardBody.classList.remove('d-none');
+        const icon = fieldCardHeader.querySelector('.fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+    }
 }
 
 function markFieldChanged(jobId, fieldId) {

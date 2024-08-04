@@ -65,8 +65,7 @@ async function loadAvailableOrders(csrfToken) {
 }
 
 function sortOrdersByPriority(orders) {
-    return orders.sort((a, b) => { return a.priority - b.priority;}
-    );
+    return orders.sort((a, b) => a.priority - b.priority);
 }
 
 function addOrderCard(order, container, type, csrfToken) {
@@ -97,6 +96,9 @@ function addOrderCard(order, container, type, csrfToken) {
                 <p><strong>Amount:</strong> ${order.amount ? order.amount : 'N/A'}</p>
                 <p><strong>Note:</strong> ${order.note ? order.note : 'N/A'}</p>
                 <p><strong>Assigned to:</strong> ${order.currentUser ? order.currentUser.username : 'N/A'}</p>
+                <div class="additional-fields">
+                    <!-- Additional fields will be inserted here -->
+                </div>
                 <div class="action-buttons mt-3">
                     <!-- Action buttons will be inserted here -->
                 </div>
@@ -106,6 +108,7 @@ function addOrderCard(order, container, type, csrfToken) {
 
     const cardHeader = card.querySelector('.card-header');
     const cardBody = card.querySelector('.card-body');
+    const additionalFieldsContainer = card.querySelector('.additional-fields');
     const actionButtonsContainer = card.querySelector('.action-buttons');
 
     cardHeader.addEventListener('click', () => {
@@ -114,6 +117,16 @@ function addOrderCard(order, container, type, csrfToken) {
         icon.classList.toggle('fa-chevron-up');
     });
 
+    // Add additional fields
+    if (order.additionalFields) {
+        const additionalFields = JSON.parse(order.additionalFields);
+        for (const [key, value] of Object.entries(additionalFields)) {
+            const fieldElement = document.createElement('p');
+            fieldElement.innerHTML = `<strong>${key}:</strong> ${value}`;
+            additionalFieldsContainer.appendChild(fieldElement);
+        }
+    }
+
     if (type === 'availableOrders') {
         const assignButton = document.createElement('button');
         assignButton.classList.add('btn', 'btn-primary', 'mr-2', 'mb-2');
@@ -121,7 +134,6 @@ function addOrderCard(order, container, type, csrfToken) {
         assignButton.addEventListener('click', () => assignOrderToMe(order, csrfToken));
         actionButtonsContainer.appendChild(assignButton);
     } else if (type === 'myOrders') {
-        // Get possible next states for the current state
         const currentStateId = order.currentState.id;
         order.orderType.fromJobStateIds.forEach((stateId, index) => {
             if (stateId === currentStateId) {

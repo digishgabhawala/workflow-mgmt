@@ -28,7 +28,8 @@ public class ArchivedOrder {
 
     @Column(name = "timestamp")
     private LocalDateTime creationDate; // New field for timestamp
-
+    @Column(length = 65535)
+    private String additionalFields; // New field for additional fields
     // Getters and setters
 
 
@@ -111,5 +112,13 @@ public class ArchivedOrder {
 
     public void setPriority(Integer priority) {
         this.priority = priority;
+    }
+
+    public String getAdditionalFields() {
+        return additionalFields;
+    }
+
+    public void setAdditionalFields(String additionalFields) {
+        this.additionalFields = additionalFields;
     }
 }

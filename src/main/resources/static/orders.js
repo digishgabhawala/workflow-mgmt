@@ -12,7 +12,7 @@ async function initializeOrderForm() {
         await loadOrders(); // Load existing orders on page load
     } catch (error) {
         console.error('Error initializing order form:', error);
-        showAlertModal('Error', 'Failed to initialize order form. Please try again.')
+        showAlertModal('Error', 'Failed to initialize order form. Please try again.');
     }
 }
 
@@ -29,12 +29,62 @@ async function populateOrderTypeDropdown() {
             const option = document.createElement('option');
             option.value = orderType.id;
             option.textContent = orderType.name;
+            option.dataset.additionalFields = JSON.stringify(orderType.additionalFields);
             orderTypeDropdown.appendChild(option);
         });
+
+        orderTypeDropdown.addEventListener('change', handleOrderTypeChange);
     } catch (error) {
         console.error('Error populating order type dropdown:', error);
         showAlertModal('Error', 'Failed to populate order type dropdown. Please try again.');
     }
+}
+
+// Function to handle order type change and populate additional fields
+function handleOrderTypeChange(event) {
+    const selectedOrderType = event.target.options[event.target.selectedIndex];
+    const additionalFields = JSON.parse(selectedOrderType.dataset.additionalFields);
+    populateAdditionalFields(additionalFields);
+}
+
+// Function to populate additional fields based on the selected order type
+function populateAdditionalFields(additionalFields) {
+    const dynamicFieldsContainer = document.getElementById('dynamicFields');
+    dynamicFieldsContainer.innerHTML = ''; // Clear any existing fields
+
+    additionalFields.forEach(field => {
+        if (['text', 'number', 'date'].includes(field.fieldType)) {
+            const formGroup = document.createElement('div');
+            formGroup.classList.add('form-group');
+            const label = document.createElement('label');
+            label.textContent = field.fieldName;
+            formGroup.appendChild(label);
+
+            let input;
+            switch (field.fieldType) {
+                case 'text':
+                    input = document.createElement('input');
+                    input.type = 'text';
+                    break;
+                case 'number':
+                    input = document.createElement('input');
+                    input.type = 'number';
+                    break;
+                case 'date':
+                    input = document.createElement('input');
+                    input.type = 'date';
+                    break;
+            }
+
+            input.id = field.fieldName;
+            input.classList.add('form-control');
+            if (field.mandatory) {
+                input.required = true;
+            }
+            formGroup.appendChild(input);
+            dynamicFieldsContainer.appendChild(formGroup);
+        }
+    });
 }
 
 // Function to fetch order types from the backend
@@ -71,6 +121,7 @@ async function fetchCsrfToken() {
 async function createOrder(order) {
     const csrfToken = await fetchCsrfToken();
     try {
+        console.log('Payload being sent:', JSON.stringify(order)); // Add this line to log the payload
         const response = await fetch('/orders', {
             method: 'POST',
             headers: {
@@ -107,17 +158,23 @@ async function handleSubmitOrder(event) {
     const note = document.getElementById('note').value;
     const amount = document.getElementById('amount').value;
 
+    const additionalFields = Array.from(document.querySelectorAll('#dynamicFields .form-control')).reduce((acc, input) => {
+        acc[input.id] = input.value;
+        return acc;
+    }, {});
+
     const order = {
         orderType: { id: orderTypeId },
-        priority: priority || 1,
-        amount: amount || null,
-        ownerDetails: {
-            ownerName: ownerName || null,
-            ownerAddress: ownerAddress || null,
-            ownerEmail: ownerEmail || null,
-            ownerMobile: ownerMobile || null
-        },
-        note: note || null
+                priority: priority || 1,
+                amount: amount || null,
+                ownerDetails: {
+                    ownerName: ownerName || null,
+                    ownerAddress: ownerAddress || null,
+                    ownerEmail: ownerEmail || null,
+                    ownerMobile: ownerMobile || null
+                },
+                note: note || null,
+                additionalFields : JSON.stringify(additionalFields) || null
     };
 
     try {
@@ -137,10 +194,14 @@ async function handleSubmitOrder(event) {
     }
 }
 
+// Function to load existing orders
 async function loadOrders() {
     try {
         let orders = await fetchOrders();
         orders = sortOrders(orders);
+        const orderCardsContainer = document.getElementById('orderCards');
+        orderCardsContainer.innerHTML = '';
+
         orders.forEach(order => {
             addOrderCard(order); // Add each order as a collapsible card
         });
@@ -150,7 +211,7 @@ async function loadOrders() {
     }
 }
 
-// Function to add an order card to the DOM
+// Function to create a card element for an order
 function addOrderCard(order) {
     const orderCardsContainer = document.getElementById('orderCards');
 
@@ -207,14 +268,24 @@ function addOrderCard(order) {
         <p><strong>Amount:</strong> ${order.amount ? order.amount : 'N/A'}</p>
         <p><strong>Note:</strong> ${order.note ? order.note : 'N/A'}</p>
         <p><strong>Creation Date:</strong> ${formatTimestamp(order.timestamp)}</p>
-        <p><strong>Assigned to ${dangerIcon}:</strong> ${order.currentUser ? order.currentUser.username : 'N/A'}</p>
+        <p><strong>Assigned to: </strong> ${order.currentUser ? order.currentUser.username : 'N/A'}</p>
         <p><strong>Pending States:</strong> ${pendingStates}</p>
         <p><strong>Completed States:</strong> ${passedStates}</p>
         <p><strong>Pending Time:</strong> ${calculateTotalEstimate(order, pendingStates)}</p>
-        <p><strong>Passed Time ${warningIconHTML}: </strong> ${formatPassedTimeString(passedTimeData)}</p>
-
-        <button class="btn btn-danger" onclick="deleteOrder(${order.id})">Delete</button>
+        <p><strong>Passed Time: </strong> ${formatPassedTimeString(passedTimeData)}</p>
     `;
+
+     if (order.additionalFields) {
+            const additionalFields = JSON.parse(order.additionalFields);
+            const additionalFieldsHtml = Object.entries(additionalFields).map(([key, value]) => `
+                <p><strong>${key}:</strong> ${value}</p>
+            `).join('');
+            cardBody.innerHTML += `${additionalFieldsHtml}`;
+        }
+
+        cardBody.innerHTML += `
+            <button class="btn btn-danger" onclick="deleteOrder(${order.id})">Delete</button>
+        `;
 
     card.appendChild(cardHeader);
     card.appendChild(cardBody);
@@ -222,8 +293,7 @@ function addOrderCard(order) {
 }
 
 
-
-// Function to fetch orders from the backend
+// Function to fetch existing orders from the backend
 async function fetchOrders() {
     try {
         const response = await fetch('/orders');
@@ -481,8 +551,10 @@ function getPendingStatesAndPassedStates(order) {
     };
 }
 
-// Function to toggle the visibility of the order form
+// Function to toggle the order creation form visibility
 function toggleOrderForm() {
     const orderForm = document.getElementById('orderForm');
     orderForm.classList.toggle('d-none');
+    const toggleButton = document.getElementById('toggleOrderFormButton');
+    toggleButton.textContent = orderForm.classList.contains('d-none') ? 'Create New Order' : 'Cancel';
 }

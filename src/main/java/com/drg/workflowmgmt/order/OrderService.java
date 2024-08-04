@@ -5,6 +5,9 @@ import com.drg.workflowmgmt.usermgmt.User;
 import com.drg.workflowmgmt.usermgmt.UserRepository;
 import com.drg.workflowmgmt.usermgmt.UserService;
 import com.drg.workflowmgmt.workflow.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,6 +16,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -40,6 +45,9 @@ public class OrderService {
     @Autowired
     private AuditRepository auditRepository;
 
+    @Autowired
+    protected ObjectMapper objectMapper;
+
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }
@@ -56,14 +64,16 @@ public class OrderService {
         if (orderTypeJob.isArchived()) {
             throw new IllegalArgumentException("Cannot create order for archived job type");
         }
+        validateAdditionalFields(order.getAdditionalFields(), orderTypeJob);
 
         order.setOrderType(orderTypeJob);
         order.setCurrentState(order.getOrderType().getStartState());
 
         return orderRepository.save(order);
     }
+
     public Order moveToState(Long orderId, Long nextStateId) {
-        return  moveToState(orderId,nextStateId,LocalDateTime.now());
+        return moveToState(orderId, nextStateId, LocalDateTime.now());
     }
 
     public Order moveToState(Long orderId, Long nextStateId, LocalDateTime time) {
@@ -102,15 +112,16 @@ public class OrderService {
         order.setCurrentUser(null);
 
         if (nextState.getId().equals(order.getOrderType().getEndState().getId())) {
-            archiveOrderAndAudits(order,time);
+            archiveOrderAndAudits(order, time);
             return order;
-        }else {
+        } else {
             return orderRepository.save(order);
         }
 
     }
+
     @Transactional
-    private void archiveOrderAndAudits(Order order,LocalDateTime time) {
+    private void archiveOrderAndAudits(Order order, LocalDateTime time) {
         try {
             // Archive order
             ArchivedOrder archivedOrder = new ArchivedOrder();
@@ -121,7 +132,7 @@ public class OrderService {
             archivedOrder.setNote(order.getNote());
             archivedOrder.setPriority(order.getPriority());
             archivedOrder.setCreationDate(order.getTimestamp());
-            if(null != order.getOwnerDetails() ){
+            if (null != order.getOwnerDetails()) {
                 OwnerDetails ownerDetails = new OwnerDetails();
                 ownerDetails.setOwnerName(order.getOwnerDetails().getOwnerName());
                 ownerDetails.setOwnerAddress(order.getOwnerDetails().getOwnerAddress());
@@ -130,6 +141,7 @@ public class OrderService {
                 archivedOrder.setOwnerDetails(ownerDetails);
                 archivedOrder.setAmount(order.getAmount());
             }
+            archivedOrder.setAdditionalFields(order.getAdditionalFields());
 
             // Archive related audits
             List<Audit> audits = order.getAuditItems();
@@ -157,6 +169,7 @@ public class OrderService {
             throw new RuntimeException("Failed to archive order and audits: " + e.getMessage());
         }
     }
+
     public Order setNote(Long orderId, String note) {
         Order order = getOrderById(orderId);
         order.setNote(note);
@@ -200,6 +213,7 @@ public class OrderService {
         order.setCurrentUser(currentUser);
         orderRepository.save(order);
     }
+
     public List<ArchivedOrder> getAllArchivedOrders() {
         return archivedOrderRepository.findAll();
     }
@@ -215,6 +229,60 @@ public class OrderService {
     }
 
     public boolean existsByOrderType(Job job) {
-        return  orderRepository.existsByOrderType(job);
+        return orderRepository.existsByOrderType(job);
+    }
+
+    protected void validateAdditionalFields(String additionalFieldsJson, Job jobType) {
+        try {
+            // Parse the JSON string into a Map
+            Map<String, Object> additionalFields = objectMapper.readValue(additionalFieldsJson, new TypeReference<Map<String, Object>>() {});
+
+            // Collect the expected field names
+            Set<String> expectedFieldNames = jobType.getAdditionalFields().stream()
+                    .map(AdditionalField::getFieldName)
+                    .collect(Collectors.toSet());
+
+            // Validate presence and type of mandatory fields
+            for (AdditionalField field : jobType.getAdditionalFields()) {
+                String fieldName = field.getFieldName();
+                boolean isFieldPresent = additionalFields.containsKey(fieldName);
+
+                if (field.isMandatory() && !isFieldPresent) {
+                    throw new IllegalArgumentException("Missing mandatory additional field: " + fieldName);
+                }
+
+                if (isFieldPresent && !validateFieldType(field.getFieldType(), additionalFields.get(fieldName))) {
+                    throw new IllegalArgumentException("Invalid additional field: " + fieldName);
+                }
+            }
+
+            // Validate that no extra fields are present in the JSON input
+            for (String fieldName : additionalFields.keySet()) {
+                if (!expectedFieldNames.contains(fieldName)) {
+                    throw new IllegalArgumentException("Invalid additional field: " + fieldName);
+                }
+            }
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("Invalid JSON for additional fields", e);
+        }
+    }
+
+
+    private boolean validateFieldType(String expectedType, Object value) {
+        switch (expectedType.toLowerCase()) {
+            case "text":
+                return value instanceof String;
+            case "number":
+                return value instanceof Integer || value instanceof Double;
+            case "date":
+                // Assuming you are sending date as a string in a specific format, e.g., ISO format
+                return value instanceof String; // You might want to add additional date validation here
+            case "boolean":
+                return value instanceof Boolean;
+            // Add more cases as needed
+            default:
+                throw new IllegalArgumentException("Unsupported field type: " + expectedType);
+        }
     }
 }
+

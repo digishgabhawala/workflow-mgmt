@@ -38,6 +38,10 @@ public class Order {
 
     private String note;
 
+//    @Column(length = 65535)
+    private String additionalFields; // Store as JSON string
+
+
     @Column(name = "timestamp")
     private LocalDateTime timestamp; // New field for timestamp
 
@@ -130,5 +134,13 @@ public class Order {
     public void setAmount(Double amount) {
         this.amount = amount;
     }
+
+    public String getAdditionalFields() {
+        return additionalFields;
+    }
+    public void setAdditionalFields(String additionalFields) {
+        this.additionalFields = additionalFields;
+    }
+
 }
 

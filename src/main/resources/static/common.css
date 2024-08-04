@@ -4,10 +4,13 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    margin: 0;
 }
 
 .container {
     flex: 1;
+    padding-bottom: 60px; /* Ensure there’s enough space at the bottom for the footer */
+
 }
 
 .offcanvas {
@@ -27,4 +30,11 @@ body {
 }
 .card-header {
             cursor: pointer;
+}
+
+footer {
+    position: relative;
+    width: 100%;
+    bottom: 0;
+    padding: 10px 0;
 }

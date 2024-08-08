@@ -257,4 +257,10 @@ public class JobController {
             this.additionalFields = additionalFields;
         }
     }
+
+    @GetMapping("/fieldtypes")
+    public ResponseEntity<List<String>> getSupportedFieldTypes() {
+        List<String> fieldTypes = AdditionalField.FieldTypeList.getSupportedFieldTypes();
+        return new ResponseEntity<>(fieldTypes, HttpStatus.OK);
+    }
 }

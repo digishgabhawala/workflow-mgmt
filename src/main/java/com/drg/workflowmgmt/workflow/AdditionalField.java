@@ -3,6 +3,10 @@ package com.drg.workflowmgmt.workflow;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.ElementCollection;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Embeddable
 public class AdditionalField {
     private String fieldName;
@@ -50,5 +54,29 @@ public class AdditionalField {
 
     public void setMandatory(boolean mandatory) {
         this.mandatory = mandatory;
+    }
+    public enum FieldType {
+        TEXT("text"),
+        NUMBER("number"),
+        DATE("date");
+
+        private final String value;
+
+        FieldType(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+    }
+
+    public class FieldTypeList {
+
+        public static List<String> getSupportedFieldTypes() {
+            return Arrays.stream(FieldType.values())
+                    .map(FieldType::getValue)
+                    .collect(Collectors.toList());
+        }
     }
 }

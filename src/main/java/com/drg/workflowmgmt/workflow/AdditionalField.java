@@ -3,6 +3,9 @@ package com.drg.workflowmgmt.workflow;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.ElementCollection;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -58,7 +61,8 @@ public class AdditionalField {
     public enum FieldType {
         TEXT("text"),
         NUMBER("number"),
-        DATE("date");
+        DATE("date"),
+        BOOLEAN("boolean");
 
         private final String value;
 
@@ -69,8 +73,44 @@ public class AdditionalField {
         public String getValue() {
             return value;
         }
-    }
 
+        public boolean validate(String value) {
+            switch (this) {
+                case TEXT:
+                    return true; // Any string is considered valid for text fields
+                case NUMBER:
+                    return isNumber(value);
+                case DATE:
+                    return isValidDate(value);
+                case BOOLEAN:
+                    return isBoolean(value);
+                default:
+                    throw new IllegalArgumentException("Unsupported field type: " + this.value);
+            }
+        }
+
+        private boolean isNumber(String value) {
+            try {
+                Double.parseDouble(value); // This can handle both integer and decimal numbers
+                return true;
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+
+        private boolean isValidDate(String value) {
+            try {
+                LocalTime parse = LocalTime.parse(value, DateTimeFormatter.ISO_LOCAL_TIME);// Example format: "14:30:00"
+                return true;
+            } catch (DateTimeParseException e) {
+                return false;
+            }
+        }
+
+        private boolean isBoolean(String value) {
+            return "true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value);
+        }
+    }
     public class FieldTypeList {
 
         public static List<String> getSupportedFieldTypes() {

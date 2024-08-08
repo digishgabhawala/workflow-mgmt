@@ -21,6 +21,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.drg.workflowmgmt.workflow.AdditionalField.*;
+
 @Service
 public class OrderService {
 
@@ -269,19 +271,11 @@ public class OrderService {
 
 
     private boolean validateFieldType(String expectedType, Object value) {
-        switch (expectedType.toLowerCase()) {
-            case "text":
-                return value instanceof String;
-            case "number":
-                return value instanceof Integer || value instanceof Double;
-            case "date":
-                // Assuming you are sending date as a string in a specific format, e.g., ISO format
-                return value instanceof String; // You might want to add additional date validation here
-            case "boolean":
-                return value instanceof Boolean;
-            // Add more cases as needed
-            default:
-                throw new IllegalArgumentException("Unsupported field type: " + expectedType);
+        try {
+            FieldType fieldType = FieldType.valueOf(expectedType.toUpperCase());
+            return fieldType.validate(value.toString());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Unsupported field type: " + expectedType, e);
         }
     }
 }

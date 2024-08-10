@@ -22,10 +22,7 @@ public class FileController {
     @PostMapping("/upload")
     public ResponseEntity<Map<String, Object>> uploadFile(@RequestParam("file") MultipartFile file) {
         String fileId = fileService.storeFile(file);
-        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/files/download/")
-                .path(fileId)
-                .toUriString();
+        String fileDownloadUri = "/files/download/" + fileId;
 
         // Create a map to hold the response data
         Map<String, Object> response = new HashMap<>();

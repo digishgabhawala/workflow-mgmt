@@ -37,6 +37,7 @@ public class FileService {
         }
 
         String fileId = UUID.randomUUID().toString();
+        fileId += "." + file.getContentType().split("/")[1];
         try {
             FileEntity fileEntity = new FileEntity(
                     fileId,

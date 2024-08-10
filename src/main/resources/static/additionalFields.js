@@ -3,21 +3,42 @@ async function addAdditionalFieldsInContainer(order, cardBody) {
         const additionalFields = JSON.parse(order.additionalFields);
         const additionalFieldsHtml = await Promise.all(Object.entries(additionalFields).map(async ([key, value]) => {
             if (isValidURL(value)) {
-                const fileId = extractFileIdFromURL(value); // Assuming the fileId is part of the URL
-                const thumbnailUrl = `/files/icon/${fileId}`;
-
-                return `
-                    <p><strong>${key}:</strong>
-                        <a href="${value}" target="_blank">
-                            <img src="${thumbnailUrl}" alt="${key} thumbnail" class="thumbnail">
-                            Download
-                        </a>
-                    </p>`;
+                if (value.endsWith('.jpg') || value.endsWith('.jpeg') || value.endsWith('.png') || value.endsWith('.gif')) {
+                    // Assume it's an image URL
+                    const fileId = extractFileIdFromURL(value); // Function to extract file ID from URL
+                    return `
+                        <p><strong>${key}:</strong>
+                            <img src="/files/icon/${fileId}" alt="${key}" class="thumbnail-image" onclick="openImagePopup('${value}')">
+                        </p>
+                        <p><a href="${value}" target="_blank">Download</a></p>
+                    `;
+                } else {
+                    return `<p><strong>${key}:</strong> <a href="${value}" target="_blank">Download</a></p>`;
+                }
             }
             return `<p><strong>${key}:</strong> ${value}</p>`;
         }));
 
         cardBody.innerHTML += additionalFieldsHtml.join('');
+    }
+}
+
+function openImagePopup(imageUrl) {
+    const popup = document.createElement('div');
+    popup.classList.add('image-popup');
+    popup.innerHTML = `
+        <div class="popup-content">
+            <span class="close-button" onclick="closeImagePopup()">&times;</span>
+            <img src="${imageUrl}" alt="Full Size Image">
+        </div>
+    `;
+    document.body.appendChild(popup);
+}
+
+function closeImagePopup() {
+    const popup = document.querySelector('.image-popup');
+    if (popup) {
+        document.body.removeChild(popup);
     }
 }
 
@@ -37,13 +58,12 @@ function additionalFields(order){
         }
 }
 
-function isValidURL(string) {
-    try {
-        new URL(string);
-        return true;
-    } catch (_) {
-        return false;
+function isValidURL(value) {
+
+    if (typeof value === 'string' && value.startsWith('/files/download/') ) {
+            return true;
     }
+    return false;
 }
 
 function populateAdditionalFields(additionalFields) {

@@ -62,7 +62,10 @@ public class AdditionalField {
         TEXT("text"),
         NUMBER("number"),
         DATE("date"),
-        BOOLEAN("boolean");
+        BOOLEAN("boolean"),
+        FILE("file");
+
+
 
         private final String value;
 
@@ -84,6 +87,8 @@ public class AdditionalField {
                     return isValidDate(value);
                 case BOOLEAN:
                     return isBoolean(value);
+                case FILE:
+                    return isValidFileUrl(value);
                 default:
                     throw new IllegalArgumentException("Unsupported field type: " + this.value);
             }
@@ -109,6 +114,9 @@ public class AdditionalField {
 
         private boolean isBoolean(String value) {
             return "true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value);
+        }
+        private boolean isValidFileUrl(String value) {
+            return value != null && !value.trim().isEmpty();
         }
     }
     public class FieldTypeList {

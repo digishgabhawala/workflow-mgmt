@@ -53,7 +53,7 @@ function populateAdditionalFields(additionalFields) {
     dynamicFieldsContainer.innerHTML = ''; // Clear any existing fields
 
     additionalFields.forEach(field => {
-        if (['text', 'number', 'date'].includes(field.fieldType)) {
+        if (['text', 'number', 'date', 'file'].includes(field.fieldType)) {
             const formGroup = document.createElement('div');
             formGroup.classList.add('form-group');
             const label = document.createElement('label');
@@ -74,6 +74,9 @@ function populateAdditionalFields(additionalFields) {
                     input = document.createElement('input');
                     input.type = 'date';
                     break;
+                case 'file':
+                    input = createFileField(field);
+                    break;
             }
 
             input.id = field.fieldName;
@@ -85,6 +88,38 @@ function populateAdditionalFields(additionalFields) {
             dynamicFieldsContainer.appendChild(formGroup);
         }
     });
+}
+
+function createFileField(field) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.dataset.fieldId = field.fieldName;
+
+    // Add file size and type validation
+    input.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!validateFile(file)) {
+            showAlertModal('Error', 'Invalid file type or size. Please upload a PDF or image file under 5MB.');
+            event.target.value = ''; // Reset the input
+        }
+    });
+
+    return input;
+}
+
+function validateFile(file) {
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+    const maxSize = 5 * 1024 * 1024; // 5 MB
+
+    if (!allowedTypes.includes(file.type)) {
+        return false;
+    }
+
+    if (file.size > maxSize) {
+        return false;
+    }
+
+    return true;
 }
 
 // Function to fetch order types from the backend
@@ -158,10 +193,25 @@ async function handleSubmitOrder(event) {
     const note = document.getElementById('note').value;
     const amount = document.getElementById('amount').value;
 
-    const additionalFields = Array.from(document.querySelectorAll('#dynamicFields .form-control')).reduce((acc, input) => {
-        acc[input.id] = input.value;
-        return acc;
-    }, {});
+    const additionalFields = {};
+    const formControls = document.querySelectorAll('#dynamicFields .form-control');
+    for (const input of formControls) {
+        if (input.type === 'file' && input.files.length > 0) {
+            // Handle file upload
+            const file = input.files[0];
+            try {
+                const fileID = await uploadFile(file);
+                additionalFields[input.id] = fileID;
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                showAlertModal('Error', 'Failed to upload file. Please try again.');
+                isSubmitting = false;
+                return;
+            }
+        } else {
+            additionalFields[input.id] = input.value;
+        }
+    }
 
     const order = {
         orderType: { id: orderTypeId },
@@ -193,6 +243,33 @@ async function handleSubmitOrder(event) {
         isSubmitting = false; // Reset the submission flag
     }
 }
+
+async function uploadFile(file) {
+    const csrfToken = await fetchCsrfToken();
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch('/files/upload', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-Token': csrfToken
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        return data.fileDownloadUri; // Assuming the backend returns a JSON with the fileDownloadUri
+    } catch (error) {
+        console.error('Error uploading file:', error);
+        throw error;
+    }
+}
+
 
 // Function to load existing orders
 async function loadOrders() {
@@ -276,12 +353,16 @@ function addOrderCard(order) {
     `;
 
      if (order.additionalFields) {
-            const additionalFields = JSON.parse(order.additionalFields);
-            const additionalFieldsHtml = Object.entries(additionalFields).map(([key, value]) => `
-                <p><strong>${key}:</strong> ${value}</p>
-            `).join('');
-            cardBody.innerHTML += `${additionalFieldsHtml}`;
-        }
+         const additionalFields = JSON.parse(order.additionalFields);
+         const additionalFieldsHtml = Object.entries(additionalFields).map(([key, value]) => {
+             if (isValidURL(value)) {
+                 return `<p><strong>${key}:</strong> <a href="${value}" target="_blank">Download</a></p>`;
+             }
+             return `<p><strong>${key}:</strong> ${value}</p>`;
+         }).join('');
+         cardBody.innerHTML += `${additionalFieldsHtml}`;
+     }
+
 
         cardBody.innerHTML += `
             <button class="btn btn-danger" onclick="deleteOrder(${order.id})">Delete</button>
@@ -292,6 +373,14 @@ function addOrderCard(order) {
     orderCardsContainer.appendChild(card);
 }
 
+function isValidURL(string) {
+    try {
+        new URL(string);
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
 
 // Function to fetch existing orders from the backend
 async function fetchOrders() {

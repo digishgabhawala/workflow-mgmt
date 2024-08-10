@@ -43,6 +43,13 @@ footer {
     width: 100px; /* Adjust as needed */
     height: auto;
     cursor: pointer;
+    border: 2px solid #ddd; /* Added border to the thumbnail */
+    border-radius: 4px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.thumbnail-image:hover {
+    transform: scale(1.05); /* Slight zoom effect on hover */
 }
 
 .image-popup {
@@ -56,24 +63,34 @@ footer {
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    padding: 20px; /* Added padding to create space for the close button */
 }
 
 .popup-content {
     position: relative;
-    max-width: 90%;
-    max-height: 90%;
+    max-width: 85%; /* Reduced width slightly */
+    max-height: 85%; /* Reduced height slightly */
+    border: 4px solid #fff;
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
 }
 
 .popup-content img {
     max-width: 100%;
     max-height: 100%;
+    display: block;
+    margin: 0 auto;
+    border-radius: 5px;
 }
 
 .close-button {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 2rem;
+    top: -20px; /* Move the close button slightly up */
+    right: -20px; /* Move the close button slightly right */
+    font-size: 1.8rem; /* Reduced size slightly */
     color: #fff;
     cursor: pointer;
+    background-color: rgba(0, 0, 0, 0.7); /* Add a background to the close button */
+    padding: 5px 10px;
+    border-radius: 50%;
+    border: 2px solid #fff;
 }

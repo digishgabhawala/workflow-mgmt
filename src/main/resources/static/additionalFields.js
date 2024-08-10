@@ -1,14 +1,29 @@
-function addAdditionalFieldsInContainer(order,cardBody){
+async function addAdditionalFieldsInContainer(order, cardBody) {
     if (order.additionalFields) {
-             const additionalFields = JSON.parse(order.additionalFields);
-             const additionalFieldsHtml = Object.entries(additionalFields).map(([key, value]) => {
-                 if (isValidURL(value)) {
-                     return `<p><strong>${key}:</strong> <a href="${value}" target="_blank">Download</a></p>`;
-                 }
-                 return `<p><strong>${key}:</strong> ${value}</p>`;
-             }).join('');
-             cardBody.innerHTML += `${additionalFieldsHtml}`;
-         }
+        const additionalFields = JSON.parse(order.additionalFields);
+        const additionalFieldsHtml = await Promise.all(Object.entries(additionalFields).map(async ([key, value]) => {
+            if (isValidURL(value)) {
+                const fileId = extractFileIdFromURL(value); // Assuming the fileId is part of the URL
+                const thumbnailUrl = `/files/icon/${fileId}`;
+
+                return `
+                    <p><strong>${key}:</strong>
+                        <a href="${value}" target="_blank">
+                            <img src="${thumbnailUrl}" alt="${key} thumbnail" class="thumbnail">
+                            Download
+                        </a>
+                    </p>`;
+            }
+            return `<p><strong>${key}:</strong> ${value}</p>`;
+        }));
+
+        cardBody.innerHTML += additionalFieldsHtml.join('');
+    }
+}
+
+function extractFileIdFromURL(url) {
+    const urlParts = url.split('/');
+    return urlParts[urlParts.length - 1]; // Assuming fileId is the last part of the URL
 }
 
 function additionalFields(order){

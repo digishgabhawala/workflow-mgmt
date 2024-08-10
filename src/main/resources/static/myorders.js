@@ -117,15 +117,8 @@ function addOrderCard(order, container, type, csrfToken) {
         icon.classList.toggle('fa-chevron-up');
     });
 
-    // Add additional fields
-    if (order.additionalFields) {
-        const additionalFields = JSON.parse(order.additionalFields);
-        for (const [key, value] of Object.entries(additionalFields)) {
-            const fieldElement = document.createElement('p');
-            fieldElement.innerHTML = `<strong>${key}:</strong> ${value}`;
-            additionalFieldsContainer.appendChild(fieldElement);
-        }
-    }
+    // Use the new function to add additional fields
+    addAdditionalFieldsInContainer(order, additionalFieldsContainer);
 
     if (type === 'availableOrders') {
         const assignButton = document.createElement('button');
@@ -153,7 +146,6 @@ function addOrderCard(order, container, type, csrfToken) {
 
     container.appendChild(card);
 }
-
 async function moveToState(order, nextStateId, csrfToken) {
     try {
         const response = await fetch(`/orders/${order.id}/moveToState?nextStateId=${nextStateId}`, {

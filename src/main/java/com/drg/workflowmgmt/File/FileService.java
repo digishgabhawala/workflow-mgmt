@@ -12,8 +12,11 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class FileService {
@@ -101,5 +104,37 @@ public class FileService {
         return fileRepository.findById(fileId)
                 .map(FileEntity::getFilename)
                 .orElse(null);
+    }
+
+    public void cleanupFiles(Set<String> fileIdsToKeep) {
+        // Fetch all files from the database
+        List<FileEntity> allFiles = fileRepository.findAll();
+
+        // Identify files to delete (those not in the fileIdsToKeep set)
+        List<FileEntity> filesToDelete = allFiles.stream()
+                .filter(file -> !fileIdsToKeep.contains(file.getId()))
+                .collect(Collectors.toList());
+
+        // Delete the files
+        for (FileEntity file : filesToDelete) {
+            deleteFile(file);
+        }
+    }
+
+    public void deleteFile(String fileId){
+        Optional<FileEntity> fileEntity = fileRepository.findById(fileId);
+        fileEntity.ifPresent(this::deleteFile);
+    }
+
+    private void deleteFile(FileEntity fileEntity) {
+        fileRepository.delete(fileEntity);
+    }
+
+
+    public List<String> getAllFileIds() {
+        return fileRepository.findAll()
+                .stream()
+                .map(FileEntity::getId)
+                .collect(Collectors.toList());
     }
 }

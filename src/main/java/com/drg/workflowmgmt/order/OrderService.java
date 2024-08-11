@@ -1,5 +1,6 @@
 package com.drg.workflowmgmt.order;
 
+import com.drg.workflowmgmt.File.FileService;
 import com.drg.workflowmgmt.usermgmt.Role;
 import com.drg.workflowmgmt.usermgmt.User;
 import com.drg.workflowmgmt.usermgmt.UserRepository;
@@ -46,6 +47,9 @@ public class OrderService {
 
     @Autowired
     private AuditRepository auditRepository;
+
+    @Autowired
+    private FileService fileService;
 
     @Autowired
     protected ObjectMapper objectMapper;
@@ -164,12 +168,43 @@ public class OrderService {
 
             // Delete order and related audits
             auditRepository.deleteAll(audits);
+            deleteFileIfExists(order);
             orderRepository.delete(order);
         } catch (Exception e) {
             // Handle exception
             e.printStackTrace();
             throw new RuntimeException("Failed to archive order and audits: " + e.getMessage());
         }
+    }
+
+    private void deleteFileIfExists(Order order) {
+        //get through all additional Fields and find if there is any file
+        //if there is any file then delete it
+        List<String> fileIds = getFileIds(order);
+        for (String fileId : fileIds) {
+            fileService.deleteFile(fileId);
+        }
+    }
+
+    public List<String> getFileIds(Order order){
+        List<String> fileIds = new ArrayList<>();
+        Map<String, Object> additionalFields = null;
+        try {
+            additionalFields = objectMapper.readValue(order.getAdditionalFields(), new TypeReference<Map<String, Object>>() {});
+            for (Map.Entry<String, Object> entry : additionalFields.entrySet()) {
+                if (isFileType(entry.getValue())) {
+                    fileIds.add(((String) entry.getValue()).substring("/files/download/".length()));
+                }
+            }
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return fileIds;
+    }
+
+    private boolean isFileType(Object value) {
+        // Implement logic to check if the value is a file ID or URL
+        return value instanceof String && ((String) value).startsWith("/files/download/");
     }
 
     public Order setNote(Long orderId, String note) {

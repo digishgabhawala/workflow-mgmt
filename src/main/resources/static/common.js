@@ -33,6 +33,7 @@ function createOffcanvasSidebar(user) {
                 <input type="file" id="importFile" required>
                 <button type="submit" class="btn btn-primary mt-2">Import</button>
             </form>
+            <button id="cleanupFilesButton" class="btn btn-secondary mt-3" onclick="handleCleanupFiles()">Cleanup Files</button>
         `;
     }
 
@@ -56,6 +57,28 @@ function createOffcanvasSidebar(user) {
         </div>
     `;
     return sidebarHTML;
+}
+
+// Function to handle cleanup files
+async function handleCleanupFiles() {
+    try {
+        const csrfToken = await fetchCsrfToken();
+        const response = await fetch('/db/cleanup-files', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken
+            }
+        });
+
+        if (response.ok) {
+            showAlertModal('Success', 'File cleanup completed successfully.');
+        } else {
+            showAlertModal('Error', 'Failed to clean up files.');
+        }
+    } catch (error) {
+        console.error('Error cleaning up files:', error);
+        showAlertModal('Error', 'An error occurred while cleaning up files.');
+    }
 }
 
 // Function to create the footer

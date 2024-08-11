@@ -1,11 +1,18 @@
 package com.drg.workflowmgmt.common;
 
+import com.drg.workflowmgmt.File.FileService;
+import com.drg.workflowmgmt.order.Order;
+import com.drg.workflowmgmt.order.OrderService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,8 +24,7 @@ import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/db")
@@ -85,5 +91,38 @@ public class DatabaseController {
             }
             return tableNames;
         }
+    }
+
+    @Autowired
+    private OrderService orderService;
+
+    @Autowired
+    private FileService fileService;
+
+    @Autowired
+    protected ObjectMapper objectMapper;
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/cleanup-files")
+    public ResponseEntity<String> cleanupFiles() {
+        // Fetch all orders
+        List<Order> allOrders = orderService.getAllOrders();
+
+        // Collect all file IDs from additionalFields
+        Set<String> fileIdsToKeep = new HashSet<>();
+        for (Order order : allOrders) {
+            fileIdsToKeep.addAll(orderService.getFileIds(order));
+        }
+        // Delete files that are not in fileIdsToKeep
+        fileService.cleanupFiles(fileIdsToKeep);
+
+
+        return ResponseEntity.ok("File cleanup completed successfully");
+    }
+
+    private boolean isFileType(Object value) {
+        // Implement logic to check if the value is a file ID or URL
+        return value instanceof String && ((String) value).startsWith("/files/download/");
     }
 }
